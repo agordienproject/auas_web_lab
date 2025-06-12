@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { registerUser, getAllUsers, getUserInfosById, modifyUserInfosById, deleteUserById, modifyUserPasswordById, modifyUserRoleById } from "../services/user.service";
+import * as userService from "../services/user.service";
 
 // Function to convert BigInt to String
 const convertBigIntToString = (obj: any) => {
@@ -13,7 +13,7 @@ export const createUser = async (req: Request, res: Response) => {
     try {
         const data = req.body;
         console.log("Data: ", data);
-        const response = await registerUser(data);
+        const response = await userService.registerUser(data);
         res.status(200).json(convertBigIntToString(response));
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -23,7 +23,7 @@ export const createUser = async (req: Request, res: Response) => {
 // Function to get all users information
 export const getUsersInfos = async (req: Request, res: Response) => {
     try {
-        const response = await getAllUsers();
+        const response = await userService.getAllUsers();
         res.status(200).json(convertBigIntToString(response));
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -36,7 +36,7 @@ export const getUserInfos = async (req: Request, res: Response) => {
         // Get user id from url
         const id = req.params.id;
         console.log("User id: ", id);
-        const response = await getUserInfosById(id);
+        const response = await userService.getUserInfosById(id);
         console.log("User found");
         res.status(200).json(convertBigIntToString(response));
     } catch (error) {
@@ -51,7 +51,7 @@ export const modifyUserInfos = async (req: Request, res: Response) => {
         const id = req.params.id;
         const data = req.body;
         console.log("User id: ", id);
-        const response = await modifyUserInfosById(id, data);
+        const response = await userService.modifyUserInfosById(id, data);
         console.log("User modified");
         console.log("Modification response: ", response);
         res.status(200).json(convertBigIntToString(response));
@@ -68,7 +68,7 @@ export const modifyUserPassword = async (req: Request, res: Response) => {
         const oldPassword = req.body.oldPassword;
         const newPassword = req.body.newPassword;
         console.log("User id: ", id);
-        const response = await modifyUserPasswordById(id, oldPassword, newPassword);
+        const response = await userService.modifyUserPasswordById(id, oldPassword, newPassword);
         console.log("User password modified");
         console.log("Modification response: ", response);
         res.status(200).json(convertBigIntToString(response));
@@ -84,7 +84,7 @@ export const modifyUserRole = async (req: Request, res: Response) => {
         const id = req.params.id;
         const data = req.body;
         console.log("User id: ", id);
-        const response = await modifyUserRoleById(id, data.role);
+        const response = await userService.modifyUserRoleById(id, data.role);
         console.log("User role modified");
         console.log("Modification response: ", response);
         res.status(200).json(convertBigIntToString(response));
@@ -101,7 +101,7 @@ export const deleteUser = async (req: Request, res: Response) => {
         const id = req.params.id;
         console.log("User id: ", id);
         // Delete user
-        await deleteUserById(id);
+        await userService.deleteUserById(id);
         console.log("User deleted");
         res.status(200).json({ message: "User deleted" });
     } catch (error) {
