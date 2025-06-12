@@ -1,17 +1,17 @@
 import { Router } from "express";
-import { register, login, logout, validateAccount, resendValidationAccount, refreshToken } from "../controllers/auth.controller";
 import { verifyToken } from "../middlewares/auth.middleware";
+import { verifyRole } from "../middlewares/user.middleware";
+import { verifyUserInInspection } from "../middlewares/inspection.middleware";
+import { getInspections, getInspection, createInspection, updateInspection, deleteInspection, validateInspection } from "../controllers/inspection.controller";
 
 const router = Router();
 
-router.get("/", verifyToken, (req, res) => {                    // Route de test
-    res.send("Hello from auth service");
-});
-router.post("/register", register);                             // Route de création de compte
-router.get("/verify", validateAccount);                         // Route de validation de compte
-router.post("/resend-validation", resendValidationAccount);      // Route de renvoi de mail de validation
-router.post("/login", login);                                   // Route de connexion
-router.get("/logout", verifyToken, logout);                     // Route de déconnexion 
-router.post("/refresh-token", refreshToken);
+router.get("/", verifyToken, getInspections);                                           // Route to get all inspections
+router.get("/:id", verifyToken, getInspection);                                         // Route to get inspection by id
+router.post("/", verifyToken, createInspection);                                        // Route to create inspection
+router.put("/:id", verifyToken, verifyUserInInspection, updateInspection);              // Route to update inspection by id
+router.put("/:id/validate", verifyToken, verifyRole, validateInspection);               // Route to validate inspection by id
+router.delete("/:id", verifyToken, verifyRole, deleteInspection);                       // Route to delete inspection by id
+
 
 export default router;

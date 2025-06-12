@@ -21,9 +21,9 @@ app.use(cors({
   }));
 
 app.use("/", authRoutes);
-app.use("/inspection", inspectionRoutes);
-app.use("/user", userRoutes);
-app.use("/dashboard", dashboardRoutes);
+app.use("/inspections", inspectionRoutes);
+app.use("/users", userRoutes);
+app.use("/dashboards", dashboardRoutes);
 
 
 export default app;

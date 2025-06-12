@@ -11,24 +11,24 @@ declare module 'express-serve-static-core' {
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_key';
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
-    console.log("Entée dans la fonction verifyToken");
+    console.log("Entering verifyToken function");
     const token = req.cookies.token;
     console.log("Token: ", token);
     if (!token) {
-        console.log("Token non trouvé");
+        console.log("Token not found");
         res.status(401).json({ error: 'Access denied. No token provided.' });
         return;
     }
-    console.log("Vérification du token");
+    console.log("Verifying token");
 
     try {
-        console.log("Décodage du token");
+        console.log("Decoding token");
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
-        console.log("Token valide");
+        console.log("Valid token");
         next();
     } catch (error) {
-        console.log("Token invalide");
+        console.log("Invalid token");
         res.status(400).json({ error: 'Invalid token.' });
     }
 };

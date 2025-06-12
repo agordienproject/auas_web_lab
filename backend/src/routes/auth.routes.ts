@@ -1,17 +1,15 @@
 import { Router } from "express";
-import { register, login, logout, validateAccount, resendValidationAccount, refreshToken } from "../controllers/auth.controller";
+import { register, login, logout, refreshToken } from "../controllers/auth.controller";
 import { verifyToken } from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.get("/", verifyToken, (req, res) => {                    // Route de test
+router.get("/", verifyToken, (req, res) => {                    // Test route
     res.send("Hello from auth service");
 });
-router.post("/register", register);                             // Route de création de compte
-router.get("/verify", validateAccount);                         // Route de validation de compte
-router.post("/resend-validation", resendValidationAccount);      // Route de renvoi de mail de validation
-router.post("/login", login);                                   // Route de connexion
-router.get("/logout", verifyToken, logout);                     // Route de déconnexion 
-router.post("/refresh-token", refreshToken);
+router.post("/register", register);                             // Register route
+router.post("/login", login);                                   // Login route
+router.get("/logout", verifyToken, logout);                     // Logout route
+router.post("/refresh-token", refreshToken);                    // Refresh token route
 
 export default router;

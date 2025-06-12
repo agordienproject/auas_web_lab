@@ -20,6 +20,7 @@ model DIM_PIECE {
   corrosions           Boolean?
   scratches            Boolean?
   details              String?   @db.VarChar
+  id_inspection        Int?
   inspection_date      DateTime? @db.Date
   inspection_path      String?   @db.VarChar(255)
   inspection_validated Boolean?
@@ -28,6 +29,7 @@ model DIM_PIECE {
   user_creation        Int?
   modification_date    DateTime? @db.Timestamp(6)
   user_modification    Int?
+  deleted              Boolean?  @default(false)
   TOP_CURRENT          Int?
 }
 
@@ -62,4 +64,5 @@ model FCT_INSPECTION {
   user_creation        Int?
   modification_date    DateTime? @db.Timestamp(6)
   user_modification    Int?
+  deleted              Boolean?  @default(false)
 }

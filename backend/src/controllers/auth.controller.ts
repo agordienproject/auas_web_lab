@@ -13,44 +13,44 @@ const convertBigIntToString = (obj: any) => {
 export const register = async (req: Request, res: Response) => {
     try {
         const response = await registerUser(req.body);
-        console.log("Utilisateur enregistré");
+        console.log("User registered");
         res.status(201).json(convertBigIntToString(response));
     } catch (error) {
-        console.error("Erreur lors de l'enregistrement de l'utilisateur:", error);
+        console.error("Error while registering user:", error);
         res.status(500).json({ error: error.message });
     }
 };
 
 export const login = async (req: Request, res: Response) => {
     try {
-        console.log("Lancement de la connexion");
+        console.log("Starting login process");
         let response = await authenticateUser(req.body);
         response = convertBigIntToString(response);
 
         const isProduction = process.env.NODE_ENV === 'prod';
         
-        // Placer le token dans les cookies
+        // Place token in cookies
         res.cookie("token", response.token, {
             maxAge: 3600000,
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? "none" : "lax"
         });
-        // Rajouter l'ID de l'utilisateur dans le cookie
+        // Add user ID to cookie
         res.cookie("userId", response.id_user, {
             maxAge: 3600000,
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? "none" : "lax"
         });
-        // Rajouter le rôle de l'utilisateur dans le cookie
+        // Add user role to cookie
         res.cookie("role", response.role, {
             maxAge: 3600000,
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? "none" : "lax"
         });
-        console.log("Cookies placés");
+        console.log("Cookies set");
         res.status(201).json(response);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -60,11 +60,11 @@ export const login = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
     try {
-        console.log("Déconnexion");
-        // Supprimer le cookie
+        console.log("Logging out");
+        // Delete cookie
         res.clearCookie('token');
         
-        // Dire que la personne est déconnectée
+        // Indicate successful logout
         res.status(200).json({ message: "Successfully logged out" });
     } catch (error) {
         res.status(500).json({ error: error.message });
