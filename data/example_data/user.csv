@@ -1,0 +1,11 @@
+id_user;first_name;last_name;pseudo;email;password;role
+1;Elies;Anthoney;eanthoney;eanthoney@hva.nl;$2a$12$7xO6oiW51Ge1FKSOp4pTHu.Rz/RGT8.6pqx3QaVe06kioMM1nuoVu;admin
+2;Kui;Fudger;kfudger;kfudger@hva.nl;$2a$12$vvx0vTpn6kLB4o5frLThMur4L2QGIAYHhyK1KxQdRzlLMUvH4oqPC;chief
+3;Mylene;Coston;mcoston;mcoston@hva.nl;$2a$12$JZL0wYMBw8uG97zsz2k6SuU5FB6jNy83.nS5QWkolR4B4DGLHNiIu;chief
+4;Maeline;Lenglet;mlenglet;mlenglet@hva.nl;$2a$12$mhA0GthbmPYj0T9WVRHyOeiiIbsR6NSsBMLViOhBObJZ0nebGTArS;inspector
+5;Nadege;Bliss;nbliss;nbliss@hva.nl;$2a$12$fTr8CnfiGC.ij4xWQcjX9OU1DScf3NbqK3CLT/n0yQHLTClGBbS4O;inspector
+6;Maena;Simants;msimants;msimants@hva.nl;$2a$12$X0BaEwkqMzxaPQa3hRS5oezMW/BnwTpLvHVgPk7.xoCInp1xcSOu.;inspector
+7;Marten;Cassella;mcassella;mcassella@hva.nl;$2a$12$QbyJRLPeYccBDXHfo5KUDecvxmjF2ftnwbFt1KVvxIlENspeUHrFy;inspector
+8;Gisele;Osburn;gosburn;gosburn@hva.nl;$2a$12$A9lubJZ5TfgvsaVIeW2o7OGF2yT7Ox.T5aNIl5GIvDA95px2sao5S;inspector
+9;Yu;Wardroper;ywardroper;ywardroper@hva.nl;$2a$12$q1Z5XCdGfyOcDpqR9Pdy.eWxWVDZN8Yr/lif6dyhXvmvnQa.gDI/K;inspector
+10;Yannick;Bastin;ybastin;ybastin@hva.nl;$2a$12$GHN0BdqR3mnqKflY.mQH.Or44EZtCVdZT/1Y95UNX0/FcZFoOZ/SW;inspector

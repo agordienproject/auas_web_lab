@@ -1,0 +1,14 @@
+services:
+  postgres_db_lab:
+    image: postgres:latest
+    container_name: postgres_db_lab
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: lab_inspection
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata2:/var/lib/postgresql/data
+volumes:
+  pgdata2:
