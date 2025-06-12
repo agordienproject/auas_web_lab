@@ -1,0 +1,4 @@
+backend/.env
+backend/prisma/generated/postgresql
+backend/node_modules
+package-lock.json

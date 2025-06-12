@@ -1,0 +1,64 @@
+generator client_psql {
+  provider = "prisma-client-js"
+  output   = "./generated/postgresql"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_PSQL")
+}
+
+model DIM_PIECE {
+  id_piece             BigInt    @id @default(autoincrement())
+  ref_piece            String?   @db.VarChar(120)
+  start_date           String?   @db.VarChar(120)
+  end_date             String?   @db.VarChar(120)
+  name_piece           String?   @db.VarChar(120)
+  state                String?   @db.VarChar(50)
+  name_program         String?   @db.VarChar(120)
+  dents                Boolean?
+  corrosions           Boolean?
+  scratches            Boolean?
+  details              String?   @db.VarChar
+  inspection_date      DateTime? @db.Date
+  inspection_path      String?   @db.VarChar(255)
+  inspection_validated Boolean?
+  user_validation      Int?
+  creation_date        DateTime? @db.Timestamp(6)
+  user_creation        Int?
+  modification_date    DateTime? @db.Timestamp(6)
+  user_modification    Int?
+  TOP_CURRENT          Int?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model DIM_USER {
+  id_user    BigInt  @id @default(autoincrement())
+  first_name String? @db.VarChar(120)
+  last_name  String? @db.VarChar(120)
+  pseudo     String? @db.VarChar(120)
+  email      String? @db.VarChar(120)
+  password   String? @db.VarChar(120)
+  role       String? @db.VarChar(120)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model FCT_INSPECTION {
+  id_inspection        BigInt    @id @default(autoincrement())
+  name_piece           String?   @db.VarChar(120)
+  ref_piece            String?   @db.VarChar(120)
+  name_program         String?   @db.VarChar(120)
+  state                String?   @db.VarChar(50)
+  dents                Boolean?
+  corrosions           Boolean?
+  scratches            Boolean?
+  details              String?   @db.VarChar
+  inspection_date      DateTime? @db.Date
+  inspection_path      String?   @db.VarChar(255)
+  inspection_validated Boolean?
+  user_validation      Int?
+  creation_date        DateTime? @db.Timestamp(6)
+  user_creation        Int?
+  modification_date    DateTime? @db.Timestamp(6)
+  user_modification    Int?
+}

@@ -63,6 +63,7 @@ COMMENT ON COLUMN "FCT_INSPECTION"."user_modification"    IS 'ID of the user who
 -- Table: DIM_PIECE
 DROP TABLE IF EXISTS "DIM_PIECE" CASCADE;
 CREATE TABLE "DIM_PIECE" (
+  "id_piece"            BIGSERIAL PRIMARY KEY,
   "ref_piece"           VARCHAR(120),
   "start_date"          VARCHAR(120),
   "end_date"            VARCHAR(120),
