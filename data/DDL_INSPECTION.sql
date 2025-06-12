@@ -7,7 +7,8 @@ CREATE TABLE "DIM_USER" (
   "pseudo"              VARCHAR(120),
   "email"               VARCHAR(120),
   "password"            VARCHAR(120),
-  "role"                VARCHAR(120)
+  "role"                VARCHAR(120),
+  "deleted"             BOOLEAN DEFAULT FALSE
 );
 
 -- Comments for DIM_USER table columns
@@ -18,6 +19,7 @@ COMMENT ON COLUMN "DIM_USER"."last_name"      IS 'User''s last name';
 COMMENT ON COLUMN "DIM_USER"."email"          IS 'User''s email address';
 COMMENT ON COLUMN "DIM_USER"."password"       IS 'User''s password';
 COMMENT ON COLUMN "DIM_USER"."role"           IS 'Role or access level (e.g., admin, inspector)';
+COMMENT ON COLUMN "DIM_USER"."deleted"        IS 'True if the user is deleted';
 
 -- Table: FCT_INSPECTION
 DROP TABLE IF EXISTS "FCT_INSPECTION" CASCADE;
@@ -38,7 +40,8 @@ CREATE TABLE "FCT_INSPECTION" (
   "creation_date"       TIMESTAMP,
   "user_creation"       INT,
   "modification_date"   TIMESTAMP,
-  "user_modification"   INT
+  "user_modification"   INT,
+  "deleted"             BOOLEAN DEFAULT FALSE
 );
 
 -- Comments for inspection table columns
@@ -59,6 +62,7 @@ COMMENT ON COLUMN "FCT_INSPECTION"."creation_date"        IS 'Date the inspectio
 COMMENT ON COLUMN "FCT_INSPECTION"."user_creation"        IS 'ID of the user who created the record';
 COMMENT ON COLUMN "FCT_INSPECTION"."modification_date"    IS 'Date the inspection was last modified';
 COMMENT ON COLUMN "FCT_INSPECTION"."user_modification"    IS 'ID of the user who last modified the record';
+COMMENT ON COLUMN "FCT_INSPECTION"."deleted"              IS 'True if the inspection is deleted';
 
 -- Table: DIM_PIECE
 DROP TABLE IF EXISTS "DIM_PIECE" CASCADE;
@@ -74,6 +78,7 @@ CREATE TABLE "DIM_PIECE" (
   "corrosions"          BOOLEAN,
   "scratches"           BOOLEAN,
   "details"             VARCHAR,
+  "id_inspection"       INT,
   "inspection_date"     DATE,
   "inspection_path"     VARCHAR(255),
   "inspection_validated" BOOLEAN,
@@ -82,6 +87,7 @@ CREATE TABLE "DIM_PIECE" (
   "user_creation"       INT,
   "modification_date"   TIMESTAMP,
   "user_modification"   INT,
+  "deleted"             BOOLEAN DEFAULT FALSE,
   "TOP_CURRENT"         INT
 );
 
@@ -96,10 +102,12 @@ COMMENT ON COLUMN "DIM_PIECE"."dents"                IS 'True if dents are prese
 COMMENT ON COLUMN "DIM_PIECE"."corrosions"           IS 'True if corrosion is detected';
 COMMENT ON COLUMN "DIM_PIECE"."scratches"            IS 'True if scratches are observed';
 COMMENT ON COLUMN "DIM_PIECE"."details"              IS 'Free text with inspection details';
+COMMENT ON COLUMN "DIM_PIECE"."id_inspection"        IS 'ID of the inspection';
 COMMENT ON COLUMN "DIM_PIECE"."inspection_date"      IS 'Date and time of the inspection';
 COMMENT ON COLUMN "DIM_PIECE"."inspection_path"      IS 'Path to associated inspection images or data';
 COMMENT ON COLUMN "DIM_PIECE"."inspection_validated" IS 'True if inspection was validated';
 COMMENT ON COLUMN "DIM_PIECE"."user_validation"      IS 'ID of the user who validated the inspection';
+COMMENT ON COLUMN "DIM_PIECE"."deleted"              IS 'True if the piece is deleted';
 COMMENT ON COLUMN "DIM_PIECE"."TOP_CURRENT"          IS 'Top current of the piece';
 
 
