@@ -7,7 +7,8 @@ CREATE TABLE "DIM_USER" (
   "pseudo"              VARCHAR(120),
   "email"               VARCHAR(120),
   "password"            VARCHAR(120),
-  "role"                VARCHAR(120)
+  "role"                VARCHAR(120),
+  "deleted"             BOOLEAN DEFAULT FALSE
 );
 
 -- Comments for DIM_USER table columns
@@ -18,6 +19,7 @@ COMMENT ON COLUMN "DIM_USER"."last_name"      IS 'User''s last name';
 COMMENT ON COLUMN "DIM_USER"."email"          IS 'User''s email address';
 COMMENT ON COLUMN "DIM_USER"."password"       IS 'User''s password';
 COMMENT ON COLUMN "DIM_USER"."role"           IS 'Role or access level (e.g., admin, inspector)';
+COMMENT ON COLUMN "DIM_USER"."deleted"        IS 'True if the user is deleted';
 
 -- Table: FCT_INSPECTION
 DROP TABLE IF EXISTS "FCT_INSPECTION" CASCADE;

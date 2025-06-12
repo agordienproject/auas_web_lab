@@ -33,13 +33,14 @@ model DIM_PIECE {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model DIM_USER {
-  id_user    BigInt  @id @default(autoincrement())
-  first_name String? @db.VarChar(120)
-  last_name  String? @db.VarChar(120)
-  pseudo     String? @db.VarChar(120)
-  email      String? @db.VarChar(120)
-  password   String? @db.VarChar(120)
-  role       String? @db.VarChar(120)
+  id_user    BigInt   @id @default(autoincrement())
+  first_name String?  @db.VarChar(120)
+  last_name  String?  @db.VarChar(120)
+  pseudo     String?  @db.VarChar(120)
+  email      String?  @db.VarChar(120)
+  password   String?  @db.VarChar(120)
+  role       String?  @db.VarChar(120)
+  deleted    Boolean? @default(false)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
