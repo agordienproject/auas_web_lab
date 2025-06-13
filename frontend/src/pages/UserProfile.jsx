@@ -4,8 +4,8 @@ import { userService } from '../services';
 
 export default function UserProfile() {
   const [profile, setProfile] = useState({
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     email: '',
     currentPassword: '',
     newPassword: '',
@@ -22,12 +22,15 @@ export default function UserProfile() {
 
   const fetchUserProfile = async () => {
     try {
+      // Catch id from local storage or session
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      console.log(`Fetching profile for user ID: ${userId}`);
       // Use userService instead of direct fetch
-      const data = await userService.getCurrentUserProfile();
+      const data = await userService.getUserById(userId);
       setProfile(prev => ({
         ...prev,
-        firstName: data.firstName || '',
-        lastName: data.lastName || '',
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
         email: data.email || '',
       }));
     } catch (err) {
@@ -59,23 +62,18 @@ export default function UserProfile() {
     }
 
     try {
+      // Get user ID from local storage or session
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
       // Prepare profile data
       const profileData = {
-        firstName: profile.firstName,
-        lastName: profile.lastName,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
         email: profile.email,
+        currentPassword: profile.currentPassword,
+        newPassword: profile.newPassword,
       };
-
-      // Update profile
-      await userService.updateProfile(profileData);
-
-      // Change password if provided
-      if (profile.currentPassword && profile.newPassword) {
-        await userService.changePassword({
-          currentPassword: profile.currentPassword,
-          newPassword: profile.newPassword,
-        });
-      }
+      // Update profile and password in one call
+      await userService.updateProfileAndPassword(profileData, userId);
 
       setSuccess('Profile updated successfully');
       setProfile(prev => ({
@@ -107,14 +105,14 @@ export default function UserProfile() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-6">
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
                 First Name
               </label>
               <div className="mt-1">
                 <TextInput
-                  id="firstName"
-                  name="firstName"
-                  value={profile.firstName}
+                  id="first_name"
+                  name="first_name"
+                  value={profile.first_name}
                   onChange={handleInputChange}
                   required
                   disabled={updating}
@@ -123,14 +121,14 @@ export default function UserProfile() {
             </div>
 
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
                 Last Name
               </label>
               <div className="mt-1">
                 <TextInput
-                  id="lastName"
-                  name="lastName"
-                  value={profile.lastName}
+                  id="last_name"
+                  name="last_name"
+                  value={profile.last_name}
                   onChange={handleInputChange}
                   required
                   disabled={updating}
@@ -231,4 +229,4 @@ export default function UserProfile() {
       </Card>
     </main>
   );
-} 
+}

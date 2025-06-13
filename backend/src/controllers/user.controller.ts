@@ -44,33 +44,14 @@ export const getUserInfos = async (req: Request, res: Response) => {
     }
 };
 
-// Function to modify user information by id
-export const modifyUserInfos = async (req: Request, res: Response) => {
+// Function to update user profile (info and/or password) by id
+export const updateUserProfile = async (req: Request, res: Response) => {
     try {
-        // Get user id from url
         const id = req.params.id;
         const data = req.body;
         console.log("User id: ", id);
-        const response = await userService.modifyUserInfosById(id, data);
-        console.log("User modified");
-        console.log("Modification response: ", response);
-        res.status(200).json(convertBigIntToString(response));
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-}
-
-// Function to modify user password by id
-export const modifyUserPassword = async (req: Request, res: Response) => {
-    try {
-        // Get user id from url
-        const id = req.params.id;
-        const oldPassword = req.body.oldPassword;
-        const newPassword = req.body.newPassword;
-        console.log("User id: ", id);
-        const response = await userService.modifyUserPasswordById(id, oldPassword, newPassword);
-        console.log("User password modified");
-        console.log("Modification response: ", response);
+        const response = await userService.updateUserProfileById(id, data);
+        console.log("User profile updated");
         res.status(200).json(convertBigIntToString(response));
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -92,7 +73,6 @@ export const modifyUserRole = async (req: Request, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 }
-
 
 // Function to delete user by id
 export const deleteUser = async (req: Request, res: Response) => {

@@ -21,33 +21,13 @@ class UserService {
     }
   }
 
-  // Get current user profile
-  async getCurrentUserProfile() {
+  // Update user profile and password in one call
+  async updateProfileAndPassword(profileData, id) {
     try {
-      const response = await api.get('/users/profile');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch profile' };
-    }
-  }
-
-  // Update current user profile
-  async updateProfile(profileData) {
-    try {
-      const response = await api.put('/users/profile', profileData);
+      const response = await api.put(`/users/${id}`, profileData);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to update profile' };
-    }
-  }
-
-  // Change password
-  async changePassword(passwordData) {
-    try {
-      const response = await api.put('/users/change-password', passwordData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Failed to change password' };
     }
   }
 
@@ -132,4 +112,4 @@ class UserService {
   }
 }
 
-export default new UserService(); 
+export default new UserService();

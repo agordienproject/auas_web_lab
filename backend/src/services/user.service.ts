@@ -184,3 +184,40 @@ export const deleteUserById = async (id: any) => {
 
     return user;
 };
+
+// Function to update user profile (info and/or password) by id
+export const updateUserProfileById = async (id: any, profileData: any) => {
+    const user = await prismaPSQL.dIM_USER.findFirst({
+        where: { id_user: id },
+    });
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+    if (profileData.first_name) updateData.first_name = profileData.first_name;
+    if (profileData.last_name) updateData.last_name = profileData.last_name;
+    if (profileData.pseudo) updateData.pseudo = profileData.pseudo;
+    if (profileData.email) updateData.email = profileData.email;
+
+    // If password change is requested
+    if (profileData.currentPassword && profileData.newPassword) {
+        // Verify old password
+        const isPasswordValid = await bcrypt.compare(profileData.currentPassword, user.password);
+        if (!isPasswordValid) {
+            throw new Error("Current password is incorrect");
+        }
+        updateData.password = await hashPassword(profileData.newPassword);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+        throw new Error("No profile fields to update");
+    }
+
+    const updatedUser = await prismaPSQL.dIM_USER.update({
+        where: { id_user: id },
+        data: updateData,
+    });
+    return updatedUser;
+};
