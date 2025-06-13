@@ -229,7 +229,17 @@ export const createHistoricalData = async (ref_piece: any, data: any, userId: an
         console.error("Error creating historical data:", error);
         throw error;
     }
-};
+}
+
+// Function to get the most recent inspections
+export const getRecentInspections = async (limit = 10) => {
+    const inspections = await prismaPSQL.fCT_INSPECTION.findMany({
+        where: { deleted: false },
+        orderBy: { creation_date: 'desc' },
+        take: limit
+    });
+    return inspections;
+}
 
 
 

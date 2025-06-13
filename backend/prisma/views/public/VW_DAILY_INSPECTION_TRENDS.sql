@@ -32,4 +32,4 @@ WHERE
 GROUP BY
   inspection_date
 ORDER BY
-  inspection_date DESC;
+  inspection_date;

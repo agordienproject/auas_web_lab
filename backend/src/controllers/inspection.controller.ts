@@ -85,6 +85,17 @@ export const deleteInspection = async (req: Request, res: Response) => {
     }
 }
 
+// Function to get the most recent inspections
+export const getRecentInspections = async (req: Request, res: Response) => {
+    try {
+        const limit = parseInt(req.query.limit as string) || 10;
+        const response = await inspectionService.getRecentInspections(limit);
+        res.status(200).json(convertBigIntToString(response));
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 
 
 

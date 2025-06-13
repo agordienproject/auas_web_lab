@@ -14,6 +14,12 @@ import {
   LineChart,
   Legend,
   Metric,
+  Table,
+  TableHead,
+  TableRow,
+  TableHeaderCell,
+  TableBody,
+  TableCell
 } from '@tremor/react';
 import { dashboardService } from '../services';
 
@@ -26,24 +32,42 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
+  const mapStatsKeys = (data) => ({
+    totalInspections: Number(data.total_inspections) || 0,
+    validatedInspections: Number(data.validated_inspections) || 0,
+    pendingInspections: Number(data.pending_inspections) || 0,
+    rejectedInspections: Number(data.deleted_inspections) || 0,
+    uniquePiecesInspected: Number(data.unique_pieces_inspected) || 0,
+    inspectionsWithDents: Number(data.inspections_with_dents) || 0,
+    inspectionsWithCorrosions: Number(data.inspections_with_corrosions) || 0,
+    inspectionsWithScratches: Number(data.inspections_with_scratches) || 0,
+  });
+
+  const mapDailyTrends = (data) =>
+    (data || []).map(item => ({
+      date: item.inspection_day,
+      total: Number(item.total_inspections) || 0,
+      validated: Number(item.validated_count) || 0,
+      dents: Number(item.dents_found) || 0,
+      corrosions: Number(item.corrosions_found) || 0,
+      scratches: Number(item.scratches_found) || 0,
+    }));
+
   const fetchDashboardData = async () => {
     try {
-      // Use dashboardService instead of direct fetch calls
       const [inspectionStats, dailyTrends, pieceCurrentState, inspectorPerformance] = await Promise.all([
         dashboardService.getInspectionStats(),
         dashboardService.getDailyTrends(),
         dashboardService.getPieceCurrentState(),
         dashboardService.getInspectorPerformance()
       ]);
-
-      // Combine all data into a single stats object
       setStats({
-        ...inspectionStats,
+        ...mapStatsKeys(inspectionStats),
         trends: {
-          daily: dailyTrends,
+          daily: mapDailyTrends(dailyTrends),
           inspectorPerformance,
           inspectorEfficiency: inspectorPerformance,
-          validationTimes: dailyTrends
+          validationTimes: mapDailyTrends(dailyTrends)
         },
         pieceData: pieceCurrentState
       });
@@ -132,13 +156,28 @@ export default function Dashboard() {
 
               <Card>
                 <Title>Inspector Performance</Title>
-                <LineChart
-                  className="mt-6"
-                  data={stats.trends?.inspectorPerformance || []}
-                  index="date"
-                  categories={['inspections']}
-                  colors={['purple']}
-                />
+                <Table className="mt-6">
+                  <TableHead>
+                    <TableRow>
+                      <TableHeaderCell>Inspector</TableHeaderCell>
+                      <TableHeaderCell>Total Inspections</TableHeaderCell>
+                      <TableHeaderCell>Validated</TableHeaderCell>
+                      <TableHeaderCell>Unique Pieces</TableHeaderCell>
+                      <TableHeaderCell>Last Inspection</TableHeaderCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(stats.trends?.inspectorPerformance || []).map((inspector) => (
+                      <TableRow key={inspector.id_user}>
+                        <TableCell>{inspector.first_name} {inspector.last_name}</TableCell>
+                        <TableCell>{inspector.total_inspections}</TableCell>
+                        <TableCell>{inspector.validated_inspections}</TableCell>
+                        <TableCell>{inspector.unique_pieces_inspected}</TableCell>
+                        <TableCell>{inspector.last_inspection_date ? new Date(inspector.last_inspection_date).toLocaleDateString() : '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </Card>
             </Grid>
           </TabPanel>
@@ -207,4 +246,4 @@ export default function Dashboard() {
       </TabGroup>
     </main>
   );
-} 
+}

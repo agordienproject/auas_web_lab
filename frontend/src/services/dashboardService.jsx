@@ -14,7 +14,7 @@ class DashboardService {
   // Get inspection statistics
   async getInspectionStats() {
     try {
-      const response = await api.get('/dashboard/inspection-stats');
+      const response = await api.get('/dashboards/stats');
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch inspection stats' };
@@ -24,7 +24,7 @@ class DashboardService {
   // Get piece current state
   async getPieceCurrentState() {
     try {
-      const response = await api.get('/dashboard/piece-current-state');
+      const response = await api.get('/dashboards/pieces');
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch piece data' };
@@ -34,7 +34,7 @@ class DashboardService {
   // Get inspector performance
   async getInspectorPerformance() {
     try {
-      const response = await api.get('/dashboard/inspector-performance');
+      const response = await api.get('/dashboards/inspectors');
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch inspector performance' };
@@ -44,7 +44,7 @@ class DashboardService {
   // Get daily trends
   async getDailyTrends() {
     try {
-      const response = await api.get('/dashboard/daily-trends');
+      const response = await api.get('/dashboards/trends');
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch daily trends' };
@@ -54,7 +54,7 @@ class DashboardService {
   // Get piece history summary
   async getPieceHistorySummary() {
     try {
-      const response = await api.get('/dashboard/piece-history-summary');
+      const response = await api.get('/dashboards/piece-history');
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch piece history' };
@@ -62,9 +62,9 @@ class DashboardService {
   }
 
   // Get recent inspections
-  async getRecentInspections(limit = 10) {
+  async getRecentInspections() {
     try {
-      const response = await api.get(`/inspections/recent?limit=${limit}`);
+      const response = await api.get(`/inspections/recent`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch recent inspections' };

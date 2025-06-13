@@ -28,7 +28,7 @@ export const getDailyInspectionTrends = async (days: number = 30) => {
             }
         },
         orderBy: {
-            inspection_day: 'desc'
+            inspection_day: 'asc'
         }
     });
 };

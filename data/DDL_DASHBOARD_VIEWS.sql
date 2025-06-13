@@ -83,7 +83,7 @@ SELECT
 FROM "FCT_INSPECTION"
 WHERE deleted = false
 GROUP BY DATE(inspection_date)
-ORDER BY inspection_day DESC;
+ORDER BY inspection_day ASC;
 
 -- Piece History Summary View
 CREATE OR REPLACE VIEW "VW_PIECE_HISTORY_SUMMARY" AS
