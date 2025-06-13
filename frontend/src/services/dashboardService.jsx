@@ -81,13 +81,32 @@ class DashboardService {
     }
   }
 
+  // Helper to format date as YYYY-MM-DD
+  formatDateParam(val) {
+    if (!val) return undefined;
+    if (val instanceof Date && !isNaN(val)) {
+      return val.toISOString().slice(0, 10);
+    }
+    if (typeof val === 'string') {
+      // Try to parse string to Date and format
+      const d = new Date(val);
+      if (!isNaN(d)) {
+        return d.toISOString().slice(0, 10);
+      }
+      // If already in YYYY-MM-DD, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    }
+    return undefined;
+  }
+
   // Get validation time distribution
   async getValidationTimeDistribution({ from, to, groupBy = 'day' } = {}) {
     try {
-      const params = [];
+      const formattedFrom = this.formatDateParam(from);
+      const formattedTo = this.formatDateParam(to);
       let url = '/dashboards/validation-times?';
-      if (from) url += `from=${encodeURIComponent(from)}&`;
-      if (to) url += `to=${encodeURIComponent(to)}&`;
+      if (formattedFrom) url += `from=${encodeURIComponent(formattedFrom)}&`;
+      if (formattedTo) url += `to=${encodeURIComponent(formattedTo)}&`;
       if (groupBy) url += `groupBy=${encodeURIComponent(groupBy)}`;
       console.log(`Fetching validation time distribution with URL: ${url}`);
       const response = await api.get(url);
