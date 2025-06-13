@@ -12,7 +12,7 @@ router.get("/", inspectionController.getInspections);                           
 router.get("/:id", inspectionController.getInspection);                                         // Route to get inspection by id
 router.post("/", inspectionController.createInspection);                                        // Route to create inspection
 router.put("/:id", verifyUserInInspection, inspectionController.updateInspection);              // Route to update inspection by id
-router.put("/:id/validate", verifyRole, inspectionController.validateInspection);               // Route to validate inspection by id
+router.put("/:id/status", verifyRole, inspectionController.updateInspectionStatus);             // Route to update inspection status
 router.delete("/:id", verifyRole, inspectionController.deleteInspection);                       // Route to delete inspection by id
 router.get("/recent", inspectionController.getRecentInspections); // Route to get recent inspections
 

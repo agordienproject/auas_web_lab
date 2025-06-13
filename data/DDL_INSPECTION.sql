@@ -35,8 +35,9 @@ CREATE TABLE "FCT_INSPECTION" (
   "details"             VARCHAR,
   "inspection_date"     DATE,
   "inspection_path"     VARCHAR(255),
-  "inspection_validated" BOOLEAN,
+  "inspection_status"   VARCHAR(50) DEFAULT 'PENDING',
   "user_validation"     INT,
+  "validation_date"     TIMESTAMP,
   "creation_date"       TIMESTAMP,
   "user_creation"       INT,
   "modification_date"   TIMESTAMP,
@@ -56,8 +57,9 @@ COMMENT ON COLUMN "FCT_INSPECTION"."scratches"            IS 'True if scratches 
 COMMENT ON COLUMN "FCT_INSPECTION"."details"              IS 'Free text with inspection details';
 COMMENT ON COLUMN "FCT_INSPECTION"."inspection_date"      IS 'Date and time of the inspection';
 COMMENT ON COLUMN "FCT_INSPECTION"."inspection_path"      IS 'Path to associated inspection images or data';
-COMMENT ON COLUMN "FCT_INSPECTION"."inspection_validated" IS 'True if inspection was validated';
+COMMENT ON COLUMN "FCT_INSPECTION"."inspection_status"    IS 'Status of the inspection (e.g., PENDING, VALIDATED, REJECTED)';
 COMMENT ON COLUMN "FCT_INSPECTION"."user_validation"      IS 'ID of the user who validated the inspection';
+COMMENT ON COLUMN "FCT_INSPECTION"."validation_date"      IS 'Date and time when the inspection was validated';
 COMMENT ON COLUMN "FCT_INSPECTION"."creation_date"        IS 'Date the inspection record was created';
 COMMENT ON COLUMN "FCT_INSPECTION"."user_creation"        IS 'ID of the user who created the record';
 COMMENT ON COLUMN "FCT_INSPECTION"."modification_date"    IS 'Date the inspection was last modified';
@@ -81,8 +83,9 @@ CREATE TABLE "DIM_PIECE" (
   "id_inspection"       INT,
   "inspection_date"     DATE,
   "inspection_path"     VARCHAR(255),
-  "inspection_validated" BOOLEAN,
+  "inspection_status"   VARCHAR(50) DEFAULT 'PENDING',
   "user_validation"     INT,
+  "validation_date"     TIMESTAMP,
   "creation_date"       TIMESTAMP,
   "user_creation"       INT,
   "modification_date"   TIMESTAMP,
@@ -105,8 +108,9 @@ COMMENT ON COLUMN "DIM_PIECE"."details"              IS 'Free text with inspecti
 COMMENT ON COLUMN "DIM_PIECE"."id_inspection"        IS 'ID of the inspection';
 COMMENT ON COLUMN "DIM_PIECE"."inspection_date"      IS 'Date and time of the inspection';
 COMMENT ON COLUMN "DIM_PIECE"."inspection_path"      IS 'Path to associated inspection images or data';
-COMMENT ON COLUMN "DIM_PIECE"."inspection_validated" IS 'True if inspection was validated';
+COMMENT ON COLUMN "DIM_PIECE"."inspection_status"    IS 'Status of the inspection (e.g., PENDING, VALIDATED, REJECTED)';
 COMMENT ON COLUMN "DIM_PIECE"."user_validation"      IS 'ID of the user who validated the inspection';
+COMMENT ON COLUMN "DIM_PIECE"."validation_date"      IS 'Date and time when the inspection was validated';
 COMMENT ON COLUMN "DIM_PIECE"."deleted"              IS 'True if the piece is deleted';
 COMMENT ON COLUMN "DIM_PIECE"."TOP_CURRENT"          IS 'Top current of the piece';
 

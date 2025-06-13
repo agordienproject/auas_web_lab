@@ -5,7 +5,7 @@ SELECT
   count(i.id_inspection) AS total_inspections,
   count(
     CASE
-      WHEN (i.inspection_validated = TRUE) THEN 1
+      WHEN ((i.inspection_status) :: text = 'VALIDATED' :: text) THEN 1
       ELSE NULL :: integer
     END
   ) AS validated_inspections,

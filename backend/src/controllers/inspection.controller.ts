@@ -57,18 +57,23 @@ export const updateInspection = async (req: Request, res: Response) => {
     }
 }
 
-// Function to validate inspection by id
-export const validateInspection = async (req: Request, res: Response) => {
+// Function to update inspection status by id
+export const updateInspectionStatus = async (req: Request, res: Response) => {
     try {
         const id = req.params.id;
+        const { status } = req.body;
         const user_id = req.user.id;
-        const response = await inspectionService.validateInspectionById(id, user_id);
-        // Create historical data after inspection validation
+        if (!['PENDING', 'VALIDATED', 'REJECTED'].includes(status)) {
+            res.status(400).json({ error: 'Invalid status value' });
+        }
+        const response = await inspectionService.updateInspectionStatus(id, status, user_id);
+        // Create historical data after inspection status update
         await inspectionService.createHistoricalData(response.ref_piece, response, user_id);
         res.status(200).json(convertBigIntToString(response));
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+    return;
 }
 
 // Function to delete inspection by id

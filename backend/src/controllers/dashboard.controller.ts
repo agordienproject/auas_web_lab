@@ -92,4 +92,20 @@ export const getPieceHistory = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch piece history" });
     }
-}; 
+};
+
+// Controller to get validation time distribution
+export const getValidationTimeDistribution = async (req: Request, res: Response) => {
+    try {
+        const from = typeof req.query.from === 'string' ? req.query.from : undefined;
+        const to = typeof req.query.to === 'string' ? req.query.to : undefined;
+        let groupBy = typeof req.query.groupBy === 'string' ? req.query.groupBy : undefined;
+        if (typeof req.query.groupBy === 'string' && ['day','week','month','year'].includes(req.query.groupBy)) {
+            groupBy = req.query.groupBy;
+        }
+        const data = await dashboardService.getValidationTimeDistribution(from, to, groupBy as 'day'|'week'|'month'|'year');
+        res.status(200).json(convertBigIntToString(data));
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};

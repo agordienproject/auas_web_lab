@@ -18,5 +18,7 @@ router.get("/inspectors", dashboardController.getInspectorPerformance);
 router.get("/trends", dashboardController.getDailyTrends);
 router.get("/piece-history", dashboardController.getPieceHistory);
 router.get("/piece-history/:ref_piece", dashboardController.getPieceHistory);
+// Route to get validation time distribution
+router.get('/validation-times', dashboardController.getValidationTimeDistribution);
 
 export default router;

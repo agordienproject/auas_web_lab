@@ -21,7 +21,7 @@ SELECT
   ) AS scratches_found,
   count(
     CASE
-      WHEN (inspection_validated = TRUE) THEN 1
+      WHEN ((inspection_status) :: text = 'VALIDATED' :: text) THEN 1
       ELSE NULL :: integer
     END
   ) AS validated_count

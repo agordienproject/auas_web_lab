@@ -19,7 +19,10 @@ import {
   TableRow,
   TableHeaderCell,
   TableBody,
-  TableCell
+  TableCell,
+  DatePicker,
+  Select,
+  SelectItem
 } from '@tremor/react';
 import { dashboardService } from '../services';
 
@@ -27,10 +30,20 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [validationTimes, setValidationTimes] = useState([]);
+  const [validationLoading, setValidationLoading] = useState(false);
+  const [validationError, setValidationError] = useState(null);
+  const [validationFrom, setValidationFrom] = useState(null);
+  const [validationTo, setValidationTo] = useState(null);
+  const [validationGroupBy, setValidationGroupBy] = useState('day');
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    fetchValidationTimes(validationFrom, validationTo, validationGroupBy);
+  }, [validationFrom, validationTo, validationGroupBy]);
 
   const mapStatsKeys = (data) => ({
     totalInspections: Number(data.total_inspections) || 0,
@@ -53,6 +66,20 @@ export default function Dashboard() {
       scratches: Number(item.scratches_found) || 0,
     }));
 
+  const mapInspectorPerformance = (data) =>
+    (data || []).map(item => {
+      const total = Number(item.total_inspections) || 0;
+      const validated = Number(item.validated_inspections) || 0;
+      return {
+        ...item,
+        inspector: `${item.first_name} ${item.last_name}`,
+        total_inspections: total,
+        validated_inspections: validated,
+        unique_pieces_inspected: Number(item.unique_pieces_inspected) || 0,
+        validationRate: total > 0 ? Math.round((validated / total) * 100) : 0,
+      };
+    });
+
   const fetchDashboardData = async () => {
     try {
       const [inspectionStats, dailyTrends, pieceCurrentState, inspectorPerformance] = await Promise.all([
@@ -65,8 +92,8 @@ export default function Dashboard() {
         ...mapStatsKeys(inspectionStats),
         trends: {
           daily: mapDailyTrends(dailyTrends),
-          inspectorPerformance,
-          inspectorEfficiency: inspectorPerformance,
+          inspectorPerformance: mapInspectorPerformance(inspectorPerformance),
+          inspectorEfficiency: mapInspectorPerformance(inspectorPerformance),
           validationTimes: mapDailyTrends(dailyTrends)
         },
         pieceData: pieceCurrentState
@@ -75,6 +102,24 @@ export default function Dashboard() {
       setError(err.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchValidationTimes = async (from, to, groupBy) => {
+    setValidationLoading(true);
+    setValidationError(null);
+    try {
+      const data = await dashboardService.getValidationTimeDistribution({ from, to, groupBy });
+      setValidationTimes(data.map(item => ({
+        date: item.validation_period || item.validation_day,
+        avg: Number(item.avg_validation_minutes),
+        min: Number(item.min_validation_minutes),
+        max: Number(item.max_validation_minutes),
+      })));
+    } catch (err) {
+      setValidationError(err.message || 'Failed to load validation time data');
+    } finally {
+      setValidationLoading(false);
     }
   };
 
@@ -164,6 +209,7 @@ export default function Dashboard() {
                       <TableHeaderCell>Validated</TableHeaderCell>
                       <TableHeaderCell>Unique Pieces</TableHeaderCell>
                       <TableHeaderCell>Last Inspection</TableHeaderCell>
+                      <TableHeaderCell>Efficiency (%)</TableHeaderCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -174,6 +220,7 @@ export default function Dashboard() {
                         <TableCell>{inspector.validated_inspections}</TableCell>
                         <TableCell>{inspector.unique_pieces_inspected}</TableCell>
                         <TableCell>{inspector.last_inspection_date ? new Date(inspector.last_inspection_date).toLocaleDateString() : '-'}</TableCell>
+                        <TableCell>{inspector.validationRate}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -225,20 +272,48 @@ export default function Dashboard() {
                   className="mt-6"
                   data={stats.trends?.inspectorEfficiency || []}
                   index="inspector"
-                  categories={['inspections', 'validationRate']}
+                  categories={['total_inspections', 'validationRate']}
                   colors={['violet', 'indigo']}
+                  yAxisWidth={40}
+                  showGridLines
+                  referenceLines={[{ y: 100, color: 'red', label: '100%' }]}
                 />
               </Card>
 
               <Card>
                 <Title>Validation Time Distribution</Title>
-                <LineChart
-                  className="mt-6"
-                  data={stats.trends?.validationTimes || []}
-                  index="timeRange"
-                  categories={['count']}
-                  colors={['emerald']}
-                />
+                <div className="flex flex-wrap gap-4 mb-4">
+                  <DatePicker
+                    value={validationFrom}
+                    onValueChange={setValidationFrom}
+                    placeholder="Min date"
+                  />
+                  <DatePicker
+                    value={validationTo}
+                    onValueChange={setValidationTo}
+                    placeholder="Max date"
+                  />
+                  <Select value={validationGroupBy} onValueChange={setValidationGroupBy}>
+                    <SelectItem value="day">Day</SelectItem>
+                    <SelectItem value="week">Week</SelectItem>
+                    <SelectItem value="month">Month</SelectItem>
+                    <SelectItem value="year">Year</SelectItem>
+                  </Select>
+                </div>
+                {validationLoading ? (
+                  <div>Loading validation time data...</div>
+                ) : validationError ? (
+                  <div className="text-red-600">{validationError}</div>
+                ) : (
+                  <LineChart
+                    className="mt-6"
+                    data={validationTimes}
+                    index="date"
+                    categories={['avg', 'min', 'max']}
+                    colors={['blue', 'emerald', 'rose']}
+                    yAxisWidth={60}
+                  />
+                )}
               </Card>
             </Grid>
           </TabPanel>

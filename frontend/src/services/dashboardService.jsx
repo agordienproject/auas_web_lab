@@ -74,12 +74,28 @@ class DashboardService {
   // Get pending validations count
   async getPendingValidationsCount() {
     try {
-      const response = await api.get('/dashboard/pending-validations-count');
+      const response = await api.get('/dashboards/pending-validations-count');
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch pending validations count' };
     }
   }
+
+  // Get validation time distribution
+  async getValidationTimeDistribution({ from, to, groupBy = 'day' } = {}) {
+    try {
+      const params = [];
+      let url = '/dashboards/validation-times?';
+      if (from) url += `from=${encodeURIComponent(from)}&`;
+      if (to) url += `to=${encodeURIComponent(to)}&`;
+      if (groupBy) url += `groupBy=${encodeURIComponent(groupBy)}`;
+      console.log(`Fetching validation time distribution with URL: ${url}`);
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to fetch validation time distribution' };
+    }
+  }
 }
 
-export default new DashboardService(); 
+export default new DashboardService();

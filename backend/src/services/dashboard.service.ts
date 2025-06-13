@@ -45,4 +45,53 @@ export const getPieceHistorySummaryByRef = async (ref_piece: string) => {
             ref_piece: ref_piece
         }
     });
-}; 
+};
+
+// Get validation time distribution for inspections
+export const getValidationTimeDistribution = async (
+    from?: string,
+    to?: string,
+    groupBy: 'day' | 'week' | 'month' | 'year' = 'day'
+) => {
+    let groupByClause = '';
+    let dateCol = 'validation_date';
+    switch (groupBy) {
+        case 'week':
+        dateCol = 'validation_date';
+            console.log('Grouping by week');
+            groupByClause = `DATE_TRUNC('week', ${dateCol})::date`;
+            break;
+        case 'month':
+            console.log('Grouping by month');
+            groupByClause = `DATE_TRUNC('month', ${dateCol})::date`;
+            break;
+        case 'year':
+            console.log('Grouping by year');
+            groupByClause = `DATE_TRUNC('year', ${dateCol})::date`;
+            break;
+        default:
+            console.log('Grouping by day');
+            groupByClause = `DATE(${dateCol})`;
+    }
+    const where = [
+        "inspection_status = 'VALIDATED'",
+        'deleted = false',
+        from ? `${dateCol} >= '${from}'` : null,
+        to ? `${dateCol} <= '${to}'` : null
+    ].filter(Boolean).join(' AND ');
+    const query = `
+    SELECT
+      ${groupByClause} AS validation_period,
+      COUNT(*) AS validated_count,
+      AVG(EXTRACT(EPOCH FROM (validation_date - creation_date)) / 60) AS avg_validation_minutes,
+      MIN(EXTRACT(EPOCH FROM (validation_date - creation_date)) / 60) AS min_validation_minutes,
+      MAX(EXTRACT(EPOCH FROM (validation_date - creation_date)) / 60) AS max_validation_minutes
+    FROM "FCT_INSPECTION"
+    WHERE ${where}
+    GROUP BY validation_period
+    ORDER BY validation_period ASC;
+  `;
+    // @ts-ignore
+    const result = await prismaPSQL.$queryRawUnsafe(query);
+    return result;
+};

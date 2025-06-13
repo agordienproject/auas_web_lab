@@ -3,19 +3,25 @@ WITH stats AS (
     count(*) AS total_inspections,
     count(
       CASE
-        WHEN ("FCT_INSPECTION".inspection_validated = TRUE) THEN 1
+        WHEN (
+          ("FCT_INSPECTION".inspection_status) :: text = 'VALIDATED' :: text
+        ) THEN 1
         ELSE NULL :: integer
       END
     ) AS validated_inspections,
     count(
       CASE
-        WHEN ("FCT_INSPECTION".inspection_validated = false) THEN 1
+        WHEN (
+          ("FCT_INSPECTION".inspection_status) :: text = 'PENDING' :: text
+        ) THEN 1
         ELSE NULL :: integer
       END
     ) AS pending_inspections,
     count(
       CASE
-        WHEN ("FCT_INSPECTION".deleted = TRUE) THEN 1
+        WHEN (
+          ("FCT_INSPECTION".inspection_status) :: text = 'REJECTED' :: text
+        ) THEN 1
         ELSE NULL :: integer
       END
     ) AS deleted_inspections,
