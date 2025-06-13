@@ -31,8 +31,9 @@ export const createInspectionInfos = async (data: any, user_id: any) => {
                 details: data.details,
                 inspection_date: data.inspection_date,
                 inspection_path: data.inspection_path,
-                inspection_validated: false,
+                inspection_status: 'PENDING',
                 user_validation: null,
+                validation_date: null,
                 creation_date: new Date(),
                 user_creation: parseInt(user_id),
                 modification_date: new Date(),
@@ -58,8 +59,9 @@ export const createInspectionInfos = async (data: any, user_id: any) => {
                     details: data.details,
                     inspection_date: data.inspection_date,
                     inspection_path: data.inspection_path,
-                    inspection_validated: false,
+                    inspection_status: 'PENDING',
                     user_validation: null,
+                    validation_date: null,
                     creation_date: new Date(),
                     user_creation: parseInt(user_id),
                     modification_date: new Date(),
@@ -112,16 +114,26 @@ export const updateInspectionById = async (id: any, data: any, user_id: any) => 
     return inspection;
 }
 
-// Function to validate inspection by id
-export const validateInspectionById = async (id: any, user_id: any) => {
+// Function to update inspection status by id
+export const updateInspectionStatus = async (id: any, status: 'PENDING' | 'VALIDATED' | 'REJECTED', user_id: any) => {
+    const updateData: any = {
+        inspection_status: status,
+        modification_date: new Date(),
+        user_modification: parseInt(user_id),
+    };
+    if (status === 'VALIDATED') {
+        updateData.user_validation = parseInt(user_id);
+        updateData.validation_date = new Date();
+    } else if (status === 'REJECTED') {
+        updateData.user_validation = parseInt(user_id);
+        updateData.validation_date = new Date();
+    } else if (status === 'PENDING') {
+        updateData.user_validation = null;
+        updateData.validation_date = null;
+    }
     const inspection = await prismaPSQL.fCT_INSPECTION.update({
         where: { id_inspection: id, deleted: false },
-        data: {
-            inspection_validated: true,
-            user_validation: parseInt(user_id),
-            modification_date: new Date(),
-            user_modification: parseInt(user_id),
-        },
+        data: updateData,
     });
     return inspection;
 }
@@ -177,8 +189,9 @@ export const createHistoricalData = async (ref_piece: any, data: any, userId: an
                         id_inspection: parseInt(data.id_inspection),
                         inspection_date: data.inspection_date,
                         inspection_path: data.inspection_path,
-                        inspection_validated: data.inspection_validated,
+                        inspection_status: data.inspection_status,
                         user_validation: data.user_validation,
+                        validation_date: data.validation_date,
                         modification_date: new Date(),
                         user_modification: parseInt(userId)
                     }
@@ -214,8 +227,9 @@ export const createHistoricalData = async (ref_piece: any, data: any, userId: an
                 id_inspection: parseInt(data.id_inspection),
                 inspection_date: data.inspection_date,
                 inspection_path: data.inspection_path,
-                inspection_validated: data.inspection_validated,
+                inspection_status: data.inspection_status,
                 user_validation: data.user_validation,
+                validation_date: data.validation_date,
                 creation_date: new Date(),
                 user_creation: parseInt(userId),
                 modification_date: new Date(),
@@ -229,7 +243,17 @@ export const createHistoricalData = async (ref_piece: any, data: any, userId: an
         console.error("Error creating historical data:", error);
         throw error;
     }
-};
+}
+
+// Function to get the most recent inspections
+export const getRecentInspections = async (limit = 10) => {
+    const inspections = await prismaPSQL.fCT_INSPECTION.findMany({
+        where: { deleted: false },
+        orderBy: { creation_date: 'desc' },
+        take: limit
+    });
+    return inspections;
+}
 
 
 

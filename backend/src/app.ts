@@ -20,10 +20,10 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
   }));
 
-app.use("/", authRoutes);
-app.use("/inspections", inspectionRoutes);
-app.use("/users", userRoutes);
-app.use("/dashboards", dashboardRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/inspections", inspectionRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/dashboards", dashboardRoutes);
 
 
 export default app;

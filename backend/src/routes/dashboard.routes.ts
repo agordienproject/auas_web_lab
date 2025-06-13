@@ -1,15 +1,24 @@
-import { Router } from "express";
-import { register, login, logout, refreshToken } from "../controllers/auth.controller";
+import express from "express";
+import * as dashboardController from "../controllers/dashboard.controller";
 import { verifyToken } from "../middlewares/auth.middleware";
+import { verifyRole } from "../middlewares/user.middleware";
 
-const router = Router();
+const router = express.Router();
 
-router.get("/", verifyToken, (req, res) => {                    // Test route
-    res.send("Hello from auth service");
-});
-router.post("/register", register);                             // Register route
-router.post("/login", login);                                   // Login route
-router.get("/logout", verifyToken, logout);                     // Logout route
-router.post("/refresh-token", refreshToken);                    // Refresh token route
+// Apply authentication middleware to all dashboard routes
+router.use(verifyToken);
+
+// Get all dashboard data in one call
+router.get("/", dashboardController.getDashboardData);
+
+// Individual endpoints for specific dashboard sections
+router.get("/stats", dashboardController.getInspectionStats);
+router.get("/pieces", dashboardController.getCurrentPieceStates);
+router.get("/inspectors", dashboardController.getInspectorPerformance);
+router.get("/trends", dashboardController.getDailyTrends);
+router.get("/piece-history", dashboardController.getPieceHistory);
+router.get("/piece-history/:ref_piece", dashboardController.getPieceHistory);
+// Route to get validation time distribution
+router.get('/validation-times', dashboardController.getValidationTimeDistribution);
 
 export default router;

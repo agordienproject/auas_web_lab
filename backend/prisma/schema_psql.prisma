@@ -1,6 +1,7 @@
 generator client_psql {
-  provider = "prisma-client-js"
-  output   = "./generated/postgresql"
+  provider        = "prisma-client-js"
+  output          = "./generated/postgresql"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -9,28 +10,29 @@ datasource db {
 }
 
 model DIM_PIECE {
-  id_piece             BigInt    @id @default(autoincrement())
-  ref_piece            String?   @db.VarChar(120)
-  start_date           String?   @db.VarChar(120)
-  end_date             String?   @db.VarChar(120)
-  name_piece           String?   @db.VarChar(120)
-  state                String?   @db.VarChar(50)
-  name_program         String?   @db.VarChar(120)
-  dents                Boolean?
-  corrosions           Boolean?
-  scratches            Boolean?
-  details              String?   @db.VarChar
-  id_inspection        Int?
-  inspection_date      DateTime? @db.Date
-  inspection_path      String?   @db.VarChar(255)
-  inspection_validated Boolean?
-  user_validation      Int?
-  creation_date        DateTime? @db.Timestamp(6)
-  user_creation        Int?
-  modification_date    DateTime? @db.Timestamp(6)
-  user_modification    Int?
-  deleted              Boolean?  @default(false)
-  TOP_CURRENT          Int?
+  id_piece          BigInt    @id @default(autoincrement())
+  ref_piece         String?   @db.VarChar(120)
+  start_date        String?   @db.VarChar(120)
+  end_date          String?   @db.VarChar(120)
+  name_piece        String?   @db.VarChar(120)
+  state             String?   @db.VarChar(50)
+  name_program      String?   @db.VarChar(120)
+  dents             Boolean?
+  corrosions        Boolean?
+  scratches         Boolean?
+  details           String?   @db.VarChar
+  id_inspection     Int?
+  inspection_date   DateTime? @db.Date
+  inspection_path   String?   @db.VarChar(255)
+  inspection_status String?   @default("PENDING") @db.VarChar(50)
+  user_validation   Int?
+  validation_date   DateTime? @db.Timestamp(6)
+  creation_date     DateTime? @db.Timestamp(6)
+  user_creation     Int?
+  modification_date DateTime? @db.Timestamp(6)
+  user_modification Int?
+  deleted           Boolean?  @default(false)
+  TOP_CURRENT       Int?
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -47,22 +49,108 @@ model DIM_USER {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model FCT_INSPECTION {
-  id_inspection        BigInt    @id @default(autoincrement())
-  name_piece           String?   @db.VarChar(120)
+  id_inspection     BigInt    @id @default(autoincrement())
+  name_piece        String?   @db.VarChar(120)
+  ref_piece         String?   @db.VarChar(120)
+  name_program      String?   @db.VarChar(120)
+  state             String?   @db.VarChar(50)
+  dents             Boolean?
+  corrosions        Boolean?
+  scratches         Boolean?
+  details           String?   @db.VarChar
+  inspection_date   DateTime? @db.Date
+  inspection_path   String?   @db.VarChar(255)
+  inspection_status String?   @default("PENDING") @db.VarChar(50)
+  user_validation   Int?
+  validation_date   DateTime? @db.Timestamp(6)
+  creation_date     DateTime? @db.Timestamp(6)
+  user_creation     Int?
+  modification_date DateTime? @db.Timestamp(6)
+  user_modification Int?
+  deleted           Boolean?  @default(false)
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view VW_INSPECTION_STATS {
+  id                          Int     @id
+  total_inspections           BigInt?
+  validated_inspections       BigInt?
+  pending_inspections         BigInt?
+  deleted_inspections         BigInt?
+  unique_pieces_inspected     BigInt?
+  inspections_with_dents      BigInt?
+  inspections_with_corrosions BigInt?
+  inspections_with_scratches  BigInt?
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view VW_PIECE_CURRENT_STATE {
+  id_piece             BigInt    @id
   ref_piece            String?   @db.VarChar(120)
-  name_program         String?   @db.VarChar(120)
+  start_date           String?   @db.VarChar(120)
+  end_date             String?   @db.VarChar(120)
+  name_piece           String?   @db.VarChar(120)
   state                String?   @db.VarChar(50)
+  name_program         String?   @db.VarChar(120)
   dents                Boolean?
   corrosions           Boolean?
   scratches            Boolean?
   details              String?   @db.VarChar
+  id_inspection        Int?
   inspection_date      DateTime? @db.Date
   inspection_path      String?   @db.VarChar(255)
-  inspection_validated Boolean?
+  inspection_status    String?   @db.VarChar(50)
   user_validation      Int?
+  validation_date      DateTime? @db.Timestamp(6)
   creation_date        DateTime? @db.Timestamp(6)
   user_creation        Int?
   modification_date    DateTime? @db.Timestamp(6)
   user_modification    Int?
-  deleted              Boolean?  @default(false)
+  deleted              Boolean?
+  TOP_CURRENT          Int?
+  validator_first_name String?   @db.VarChar(120)
+  validator_last_name  String?   @db.VarChar(120)
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view VW_INSPECTOR_PERFORMANCE {
+  id_user                 BigInt    @id
+  first_name              String?   @db.VarChar(120)
+  last_name               String?   @db.VarChar(120)
+  total_inspections       BigInt?
+  validated_inspections   BigInt?
+  unique_pieces_inspected BigInt?
+  last_inspection_date    DateTime? @db.Date
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view VW_DAILY_INSPECTION_TRENDS {
+  inspection_day    DateTime @id @db.Date
+  total_inspections BigInt?
+  dents_found       BigInt?
+  corrosions_found  BigInt?
+  scratches_found   BigInt?
+  validated_count   BigInt?
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view VW_PIECE_HISTORY_SUMMARY {
+  ref_piece                 String    @id @db.VarChar(120)
+  total_versions            BigInt?
+  first_inspection_date     DateTime? @db.Date
+  latest_inspection_date    DateTime? @db.Date
+  historical_states         String?
+  total_dents_reported      BigInt?
+  total_corrosions_reported BigInt?
+  total_scratches_reported  BigInt?
+
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view VW_VALIDATION_TIME_DISTRIBUTION {
+  validation_day         DateTime  @id @db.Date
+  validated_count        BigInt?
+  avg_validation_minutes Decimal?  @db.Decimal
+  min_validation_minutes Decimal?  @db.Decimal
+  max_validation_minutes Decimal?  @db.Decimal
 }
