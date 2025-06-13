@@ -5,6 +5,7 @@ class UserService {
   async getUsers(params = {}) {
     try {
       const response = await api.get('/users', { params });
+      console.log('Fetched users:', response.data);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to fetch users' };
@@ -54,10 +55,21 @@ class UserService {
   // Delete user (admin only)
   async deleteUser(id) {
     try {
+      console.log(`Deleting user with ID: ${id}`);
       const response = await api.delete(`/users/${id}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to delete user' };
+    }
+  }
+
+  // Reactivate user (admin only)
+  async activateUser(id) {
+    try {
+      const response = await api.put(`/users/${id}/activate`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to reactivate user' };
     }
   }
 

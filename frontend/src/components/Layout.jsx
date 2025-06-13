@@ -1,4 +1,5 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
+import { authService } from '../services';
 import { Dialog, Transition } from '@headlessui/react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -14,11 +15,13 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
-export default function Layout({ children }) {
+export default function Layout({ children, userRole }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const userRole = 'admin'; // This should come from your auth context/state
+
+  console.log(`Current location: ${location.pathname}`);
+  console.log(`User role: ${userRole}`);
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
@@ -32,7 +35,7 @@ export default function Layout({ children }) {
   ];
 
   const handleLogout = () => {
-    // Add logout logic here
+    authService.logout()
     navigate('/login');
   };
 
@@ -118,38 +121,38 @@ export default function Layout({ children }) {
         </Transition.Root>
 
         {/* Static sidebar for desktop */}
-        <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-          <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4">
-            <div className="flex h-16 shrink-0 items-center">
+        <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-[10vw] lg:min-w-[140px] lg:max-w-[220px] lg:flex-col bg-gradient-to-b from-indigo-50 to-white border-r border-gray-200">
+          <div className="flex grow flex-col gap-y-4 overflow-y-auto px-2 pb-4">
+            <div className="flex h-16 shrink-0 items-center justify-center">
               <img
-                className="h-8 w-auto"
+                className="h-10 w-auto"
                 src="/logo.png"
                 alt="Your Company"
               />
             </div>
             <nav className="flex flex-1 flex-col">
-              <ul role="list" className="flex flex-1 flex-col gap-y-7">
+              <ul role="list" className="flex flex-1 flex-col gap-y-5">
                 <li>
-                  <ul role="list" className="-mx-2 space-y-1">
+                  <ul role="list" className="space-y-1">
                     {navigation.map((item) => (
                       <li key={item.name}>
                         <Link
                           to={item.href}
                           className={classNames(
                             location.pathname === item.href
-                              ? 'bg-gray-50 text-indigo-600'
-                              : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50',
-                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                              ? 'bg-indigo-100 text-indigo-700 shadow-sm'
+                              : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50',
+                            'group flex items-center gap-x-3 rounded-md p-2 text-sm font-medium transition-colors duration-150'
                           )}
                         >
                           <item.icon
                             className={classNames(
                               location.pathname === item.href ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600',
-                              'h-6 w-6 shrink-0'
+                              'h-5 w-5 shrink-0'
                             )}
                             aria-hidden="true"
                           />
-                          {item.name}
+                          <span>{item.name}</span>
                         </Link>
                       </li>
                     ))}
@@ -158,8 +161,9 @@ export default function Layout({ children }) {
                 <li className="mt-auto">
                   <button
                     onClick={handleLogout}
-                    className="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
+                    className="w-full text-left text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 group flex items-center gap-x-3 rounded-md p-2 text-sm font-medium transition-colors duration-150"
                   >
+                    <XMarkIcon className="h-5 w-5 text-gray-400 group-hover:text-indigo-600" />
                     Logout
                   </button>
                 </li>
@@ -168,7 +172,7 @@ export default function Layout({ children }) {
           </div>
         </div>
 
-        <div className="lg:pl-72">
+        <div className="lg:ml-[10vw]">
           <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
             <button
               type="button"
@@ -188,7 +192,7 @@ export default function Layout({ children }) {
           </div>
 
           <main className="py-10">
-            <div className="px-4 sm:px-6 lg:px-8">
+            <div className="w-[90vw] px-4 sm:px-6 lg:px-8">
               {children}
             </div>
           </main>
@@ -196,4 +200,4 @@ export default function Layout({ children }) {
       </div>
     </>
   );
-} 
+}

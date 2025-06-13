@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import UserProfile from './pages/UserProfile';
@@ -9,8 +9,25 @@ import ValidationQueue from './pages/ValidationQueue';
 import Layout from './components/Layout';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState(null);
+  // Initialize from localStorage if present
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
+  const [userRole, setUserRole] = useState(() => {
+    const role = localStorage.getItem('role');
+    console.log(`Initial user role from localStorage: ${role}`);
+    return role || 'inspector'; // Default to 'inspector' if not set
+  });
+
+  // Sync auth state to localStorage
+  useEffect(() => {
+    localStorage.setItem('isAuthenticated', isAuthenticated);
+    if (isAuthenticated && userRole) {
+      console.log(`Setting user role in localStorage: ${userRole}`);
+      localStorage.setItem('role', userRole);
+    }
+    // Do NOT remove 'role' here; only remove it on explicit logout!
+  }, [isAuthenticated, userRole]);
 
   // Protected Route wrapper
   const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -45,7 +62,7 @@ function App() {
 
         <Route path="/dashboard" element={
           <ProtectedRoute>
-            <Layout>
+            <Layout userRole={userRole} key={userRole}>
               <Dashboard />
             </Layout>
           </ProtectedRoute>
@@ -53,7 +70,7 @@ function App() {
 
         <Route path="/profile" element={
           <ProtectedRoute>
-            <Layout>
+            <Layout userRole={userRole} key={userRole}>
               <UserProfile />
             </Layout>
           </ProtectedRoute>
@@ -61,7 +78,7 @@ function App() {
 
         <Route path="/admin/users" element={
           <ProtectedRoute allowedRoles={['admin']}>
-            <Layout>
+            <Layout userRole={userRole} key={userRole}>
               <AdminUsers />
             </Layout>
           </ProtectedRoute>
@@ -69,7 +86,7 @@ function App() {
 
         <Route path="/inspections/:id" element={
           <ProtectedRoute>
-            <Layout>
+            <Layout userRole={userRole} key={userRole}>
               <InspectionDetails />
             </Layout>
           </ProtectedRoute>
@@ -77,7 +94,7 @@ function App() {
 
         <Route path="/validation-queue" element={
           <ProtectedRoute allowedRoles={['chief', 'admin']}>
-            <Layout>
+            <Layout userRole={userRole} key={userRole}>
               <ValidationQueue />
             </Layout>
           </ProtectedRoute>
@@ -87,4 +104,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

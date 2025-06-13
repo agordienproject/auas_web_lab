@@ -88,3 +88,18 @@ export const deleteUser = async (req: Request, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 }
+
+// Function to activate user by id (reactivate user)
+export const activateUser = async (req: Request, res: Response) => {
+    try {
+        // Get user id from url
+        const id = req.params.id;
+        console.log("User id: ", id);
+        // Activate user
+        const response = await userService.activateUserById(id);
+        console.log("User activated");
+        res.status(200).json(convertBigIntToString(response));
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}

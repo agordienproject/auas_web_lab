@@ -12,6 +12,7 @@ router.get("/:id", verifyUserId, userController.getUserInfos);                  
 router.put("/:id", verifyUserId, userController.updateUserProfile);                // Route to update user profile (info and/or password)
 router.put("/:id/role", verifyRole, userController.modifyUserRole);                // Route to modify user role by id
 router.delete("/:id", verifyRole, userController.deleteUser);                      // Route to delete user by id
+router.put("/:id/activate", verifyRole, userController.activateUser);                       // Route to reactivate user by id
 
 
 export default router;

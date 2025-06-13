@@ -54,7 +54,8 @@ class InspectionService {
   // Validate inspection (for chiefs/admins)
   async validateInspection(id, validationData) {
     try {
-      const response = await api.post(`/inspections/${id}/validate`, validationData);
+      console.log(`Validating inspection with ID: ${id}`, validationData);
+      const response = await api.put(`/inspections/${id}/status`, validationData);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to validate inspection' };

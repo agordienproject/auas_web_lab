@@ -181,9 +181,31 @@ export const deleteUserById = async (id: any) => {
         where: { id_user: id },
         data: { deleted: true },
     });
+    console.log(`User with id ${id} has been deleted (soft delete).`);
 
     return user;
 };
+
+// Function to reactivate user by id (soft delete with suspended column)
+export const activateUserById = async (id: any) => {
+    const user = await prismaPSQL.dIM_USER.findFirst({
+        where: { 
+            id_user: id,
+            deleted: true 
+        },
+    });
+    if (!user) {
+        throw new Error("User not found or not suspended");
+    }
+
+    const updatedUser = await prismaPSQL.dIM_USER.update({
+        where: { id_user: id },
+        data: { deleted: false },
+    });
+    console.log(`User with id ${id} has been reactivated.`);
+
+    return updatedUser;
+}
 
 // Function to update user profile (info and/or password) by id
 export const updateUserProfileById = async (id: any, profileData: any) => {

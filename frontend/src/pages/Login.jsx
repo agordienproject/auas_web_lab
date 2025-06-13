@@ -18,9 +18,9 @@ export default function Login({ onLogin }) {
     try {
       // Use authService instead of direct fetch
       const data = await authService.login({ email, password });
-      
-      // Call the onLogin callback with user data
-      onLogin(data.user);
+      localStorage.setItem('role', data.role);
+      onLogin(data.role); // user complete user object
+      // Redirect to dashboard after successful login
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Invalid email or password');

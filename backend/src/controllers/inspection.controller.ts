@@ -65,6 +65,7 @@ export const updateInspectionStatus = async (req: Request, res: Response) => {
         const user_id = req.user.id;
         if (!['PENDING', 'VALIDATED', 'REJECTED'].includes(status)) {
             res.status(400).json({ error: 'Invalid status value' });
+            return;
         }
         const response = await inspectionService.updateInspectionStatus(id, status, user_id);
         // Create historical data after inspection status update

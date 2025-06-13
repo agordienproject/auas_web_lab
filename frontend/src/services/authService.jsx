@@ -25,15 +25,18 @@ class AuthService {
 
     // Logout function
     async logout() {
+        console.log("Logout function called");
         try {
             // Call backend logout endpoint to clear cookies
-            await api.post('/auth/logout');
+            await api.get('/auth/logout');
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
             // Clear localStorage regardless of backend response
-            localStorage.removeItem('user');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('role');
             localStorage.removeItem('token');
+            localStorage.setItem('isAuthenticated', false);
         }
     }
 

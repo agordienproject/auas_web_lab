@@ -24,11 +24,18 @@ export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState(null);
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUser, setNewUser] = useState({
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     email: '',
     role: '',
+    password: '',
   });
+
+  // Filter states
+  const [nameFilter, setNameFilter] = useState('');
+  const [emailFilter, setEmailFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -53,12 +60,22 @@ export default function AdminUsers() {
   const handleUpdateUser = async () => {
     setSaving(true);
     setError(null);
-    
     try {
-      // Use userService instead of direct fetch
-      const updatedUser = await userService.updateUser(editingUser.id, editingUser);
-      setUsers(users.map(user => 
-        user.id === updatedUser.id ? updatedUser : user
+      // First, update classic user data (excluding role)
+      const { id_user, first_name, last_name, email, role: newRole } = editingUser;
+      const userToUpdate = { first_name, last_name, email };
+      const updatedUser = await userService.updateUser(id_user, userToUpdate);
+
+      // Find the original user to compare role
+      const originalUser = users.find(u => u.id_user === id_user);
+      if (originalUser && originalUser.role !== newRole) {
+        // If role changed, update role
+        await userService.updateUserRole(id_user, newRole);
+        updatedUser.role = newRole; // reflect the new role in UI
+      }
+
+      setUsers(users.map(user =>
+        user.id_user === updatedUser.id_user ? updatedUser : user
       ));
       setEditingUser(null);
     } catch (err) {
@@ -78,10 +95,11 @@ export default function AdminUsers() {
       setUsers([...users, addedUser]);
       setShowAddUser(false);
       setNewUser({
-        firstName: '',
-        lastName: '',
+        first_name: '',
+        last_name: '',
         email: '',
         role: '',
+        password: '',
       });
     } catch (err) {
       setError(err.message || 'Failed to add user');
@@ -90,22 +108,37 @@ export default function AdminUsers() {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) {
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      // Use userService instead of direct fetch
-      await userService.deleteUser(userId);
-      setUsers(users.filter(user => user.id !== userId));
-    } catch (err) {
-      setError(err.message || 'Failed to delete user');
-    } finally {
-      setSaving(false);
+  const handleDeleteOrReactivateUser = async (user) => {
+    if (user.deleted) {
+      // Reactivate user
+      if (!window.confirm('Are you sure you want to reactivate this user?')) {
+        return;
+      }
+      setSaving(true);
+      setError(null);
+      try {
+        const reactivatedUser = await userService.activateUser(user.id_user);
+        setUsers(users.map(u => u.id_user === user.id_user ? reactivatedUser : u));
+      } catch (err) {
+        setError(err.message || 'Failed to reactivate user');
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      // Delete user
+      if (!window.confirm('Are you sure you want to delete this user?')) {
+        return;
+      }
+      setSaving(true);
+      setError(null);
+      try {
+        await userService.deleteUser(user.id_user);
+        setUsers(users.map(u => u.id_user === user.id_user ? { ...u, deleted: true } : u));
+      } catch (err) {
+        setError(err.message || 'Failed to delete user');
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -117,13 +150,30 @@ export default function AdminUsers() {
   const handleCancelAdd = () => {
     setShowAddUser(false);
     setNewUser({
-      firstName: '',
-      lastName: '',
+      first_name: '',
+      last_name: '',
       email: '',
       role: '',
+      password: '',
     });
     setError(null);
   };
+
+  // Filtered users: by default, show only active users unless statusFilter is set
+  const filteredUsers = users.filter(user => {
+    const name = `${user.first_name} ${user.last_name}`.toLowerCase();
+    const email = user.email.toLowerCase();
+    const role = user.role;
+    const status = user.deleted ? 'deleted' : 'active';
+    // If statusFilter is unset, default to 'active' users only
+    const statusMatch = statusFilter ? status === statusFilter : status === 'active';
+    return (
+      name.includes(nameFilter.toLowerCase()) &&
+      email.includes(emailFilter.toLowerCase()) &&
+      (roleFilter ? role === roleFilter : true) &&
+      statusMatch
+    );
+  });
 
   if (loading) {
     return (
@@ -134,7 +184,7 @@ export default function AdminUsers() {
   }
 
   return (
-    <main className="p-4 md:p-10 mx-auto max-w-7xl">
+    <main className="p-4 md:p-10 w-full">
       <div className="flex justify-between items-center mb-6">
         <Title>User Management</Title>
         <Button 
@@ -159,16 +209,16 @@ export default function AdminUsers() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">First Name</label>
                 <TextInput
-                  value={newUser.firstName}
-                  onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
+                  value={newUser.first_name}
+                  onChange={(e) => setNewUser({ ...newUser, first_name: e.target.value })}
                   disabled={saving}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Last Name</label>
                 <TextInput
-                  value={newUser.lastName}
-                  onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
+                  value={newUser.last_name}
+                  onChange={(e) => setNewUser({ ...newUser, last_name: e.target.value })}
                   disabled={saving}
                 />
               </div>
@@ -189,11 +239,19 @@ export default function AdminUsers() {
                 onValueChange={(value) => setNewUser({ ...newUser, role: value })}
                 disabled={saving}
               >
-                <SelectItem value="user">User</SelectItem>
                 <SelectItem value="inspector">Inspector</SelectItem>
                 <SelectItem value="chief">Chief</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
               </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <TextInput
+                type="password"
+                value={newUser.password}
+                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                disabled={saving}
+              />
             </div>
             <div className="flex justify-end gap-2">
               <Button 
@@ -219,43 +277,98 @@ export default function AdminUsers() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableHeaderCell>Name</TableHeaderCell>
-              <TableHeaderCell>Email</TableHeaderCell>
-              <TableHeaderCell>Role</TableHeaderCell>
-              <TableHeaderCell>Status</TableHeaderCell>
+              <TableHeaderCell>
+                <div className="flex flex-col">
+                  Name
+                  <TextInput
+                    className="mt-1"
+                    placeholder="Search name..."
+                    value={nameFilter}
+                    onChange={e => setNameFilter(e.target.value)}
+                    disabled={saving}
+                    size="sm"
+                  />
+                </div>
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <div className="flex flex-col">
+                  Email
+                  <TextInput
+                    className="mt-1"
+                    placeholder="Search email..."
+                    value={emailFilter}
+                    onChange={e => setEmailFilter(e.target.value)}
+                    disabled={saving}
+                    size="sm"
+                  />
+                </div>
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <div className="flex flex-col">
+                  Role
+                  <Select
+                    className="mt-1"
+                    value={roleFilter}
+                    onValueChange={setRoleFilter}
+                    disabled={saving}
+                    size="sm"
+                  >
+                    <SelectItem value="">All</SelectItem>
+                    <SelectItem value="inspector">Inspector</SelectItem>
+                    <SelectItem value="chief">Chief</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </Select>
+                </div>
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <div className="flex flex-col">
+                  Status
+                  <Select
+                    className="mt-1"
+                    value={statusFilter}
+                    onValueChange={setStatusFilter}
+                    disabled={saving}
+                    size="sm"
+                  >
+                    <SelectItem value="">All</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="deleted">Deleted</SelectItem>
+                  </Select>
+                </div>
+              </TableHeaderCell>
               <TableHeaderCell>Actions</TableHeaderCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                   No users found
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
+              filteredUsers.map((user) => (
+                <TableRow key={user.id_user}>
                   <TableCell>
-                    {editingUser?.id === user.id ? (
+                    {editingUser?.id_user === user.id_user ? (
                       <div className="space-y-2">
                         <TextInput
-                          value={editingUser.firstName}
-                          onChange={(e) => setEditingUser({ ...editingUser, firstName: e.target.value })}
+                          value={editingUser.first_name}
+                          onChange={(e) => setEditingUser({ ...editingUser, first_name: e.target.value })}
                           disabled={saving}
                         />
                         <TextInput
-                          value={editingUser.lastName}
-                          onChange={(e) => setEditingUser({ ...editingUser, lastName: e.target.value })}
+                          value={editingUser.last_name}
+                          onChange={(e) => setEditingUser({ ...editingUser, last_name: e.target.value })}
                           disabled={saving}
                         />
                       </div>
                     ) : (
-                      `${user.firstName} ${user.lastName}`
+                      `${user.first_name} ${user.last_name}`
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingUser?.id === user.id ? (
+                    {editingUser?.id_user === user.id_user ? (
                       <TextInput
                         type="email"
                         value={editingUser.email}
@@ -267,7 +380,7 @@ export default function AdminUsers() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingUser?.id === user.id ? (
+                    {editingUser?.id_user === user.id_user ? (
                       <Select
                         value={editingUser.role}
                         onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
@@ -290,12 +403,12 @@ export default function AdminUsers() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge color={user.active ? 'emerald' : 'red'}>
-                      {user.active ? 'Active' : 'Inactive'}
+                    <Badge color={user.deleted ? 'red' : 'emerald'}>
+                      {user.deleted ? 'Deleted' : 'Active'}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {editingUser?.id === user.id ? (
+                    {editingUser?.id_user === user.id_user ? (
                       <div className="flex gap-2">
                         <Button
                           size="xs"
@@ -325,12 +438,12 @@ export default function AdminUsers() {
                         </Button>
                         <Button
                           size="xs"
-                          color="red"
-                          onClick={() => handleDeleteUser(user.id)}
+                          color={user.deleted ? 'emerald' : 'red'}
+                          onClick={() => handleDeleteOrReactivateUser(user)}
                           loading={saving}
                           disabled={saving}
                         >
-                          {saving ? 'Deleting...' : 'Delete'}
+                          {saving ? (user.deleted ? 'Reactivating...' : 'Deleting...') : (user.deleted ? 'Reactivate' : 'Delete')}
                         </Button>
                       </div>
                     )}
@@ -343,4 +456,4 @@ export default function AdminUsers() {
       </Card>
     </main>
   );
-} 
+}

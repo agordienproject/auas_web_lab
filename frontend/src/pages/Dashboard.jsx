@@ -148,7 +148,7 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="p-4 md:p-10 mx-auto max-w-7xl">
+    <main className="p-4 md:p-10 w-full">
       <Title>Inspection Dashboard</Title>
       <Text>A comprehensive overview of inspection activities and metrics.</Text>
 
