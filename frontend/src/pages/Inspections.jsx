@@ -19,17 +19,14 @@ import {
 import { inspectionService } from '../services';
 import userService from '../services/userService';
 
-export default function ValidationQueue() {
+export default function Inspections() {
   const [inspections, setInspections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [validating, setValidating] = useState(false);
   const [error, setError] = useState(null);
   const [searchPiece, setSearchPiece] = useState('');
   const [searchRef, setSearchRef] = useState('');
   const [filterState, setFilterState] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
-  const [filterProgram, setFilterProgram] = useState('');
-  const [filterIssues, setFilterIssues] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50);
   const [dateFrom, setDateFrom] = useState(null);
@@ -39,62 +36,21 @@ export default function ValidationQueue() {
   const navigate = useNavigate();
 
   const fetchInspections = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      // Use inspectionService instead of direct fetch
-      const data = await inspectionService.getInspections({ status: filterStatus });
+      const data = await inspectionService.getInspections();
       setInspections(data);
     } catch (err) {
       setError(err.message || 'Failed to load inspections');
     } finally {
       setLoading(false);
     }
-  }, [filterStatus]);
+  }, []);
 
   useEffect(() => {
     fetchInspections();
   }, [fetchInspections]);
-
-  const handleValidate = async (inspectionId) => {
-    setValidating(true);
-    setError(null);
-    
-    try {
-      // Use inspectionService instead of direct fetch
-      await inspectionService.validateInspection(inspectionId, { 
-        status: "VALIDATED",
-      });
-
-      // Refresh the list
-      await fetchInspections();
-    } catch (err) {
-      setError(err.message || 'Failed to validate inspection');
-    } finally {
-      setValidating(false);
-    }
-  };
-
-  const handleReject = async (inspectionId) => {
-    if (!window.confirm('Are you sure you want to reject this inspection?')) {
-      return;
-    }
-
-    setValidating(true);
-    setError(null);
-
-    try {
-      // Use inspectionService instead of direct fetch
-      await inspectionService.validateInspection(inspectionId, { 
-        status: "REJECTED",
-      });
-
-      // Refresh the list
-      await fetchInspections();
-    } catch (err) {
-      setError(err.message || 'Failed to reject inspection');
-    } finally {
-      setValidating(false);
-    }
-  };
 
   // Fetch users for mapping userId to name
   const fetchUsers = useCallback(async (userIds) => {
@@ -119,35 +75,25 @@ export default function ValidationQueue() {
     }
   }, [inspections, fetchUsers]);
 
-  // Filtering logic for new columns
+  // Filtering logic
   const filteredInspections = inspections.filter(inspection => {
     const piece = inspection.name_piece?.toLowerCase() || '';
     const ref = inspection.ref_piece?.toLowerCase() || '';
-    const program = inspection.name_program || '';
     const state = inspection.state || '';
     const status = inspection.inspection_status || '';
     const inspectionDate = inspection.inspection_date ? new Date(inspection.inspection_date) : null;
-
     // Date filter
     if (dateFrom && inspectionDate && inspectionDate < new Date(dateFrom)) return false;
     if (dateTo && inspectionDate && inspectionDate > new Date(dateTo)) return false;
-
-    // Issues filter
-    if (filterIssues.length > 0) {
-      const matches = filterIssues.every(issue => inspection[issue]);
-      if (!matches) return false;
-    }
-
     return (
       piece.includes(searchPiece.toLowerCase()) &&
       ref.includes(searchRef.toLowerCase()) &&
       (filterState ? state === filterState : true) &&
-      (filterStatus ? status === filterStatus : true) &&
-      (filterProgram ? program === filterProgram : true)
+      (filterStatus ? status === filterStatus : true)
     );
   });
 
-  // Sorting logic (default: date desc, pending first)
+  // Sorting logic (default: date desc)
   const sortedInspections = sortConfig.key
     ? [...filteredInspections].sort((a, b) => {
         let aValue = a[sortConfig.key];
@@ -155,18 +101,12 @@ export default function ValidationQueue() {
         if (sortConfig.key === 'inspection_date') {
           aValue = aValue ? new Date(aValue) : new Date(0);
           bValue = bValue ? new Date(bValue) : new Date(0);
-        } else {
-          aValue = aValue ? aValue.toString().toLowerCase() : '';
-          bValue = bValue ? bValue.toString().toLowerCase() : '';
         }
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       })
     : [...filteredInspections].sort((a, b) => {
-        // Pending first
-        if (a.inspection_status === 'PENDING' && b.inspection_status !== 'PENDING') return -1;
-        if (a.inspection_status !== 'PENDING' && b.inspection_status === 'PENDING') return 1;
         // Date desc
         const aDate = a.inspection_date ? new Date(a.inspection_date) : new Date(0);
         const bDate = b.inspection_date ? new Date(b.inspection_date) : new Date(0);
@@ -180,32 +120,27 @@ export default function ValidationQueue() {
   // Sorting handler (3-state: asc, desc, default)
   const handleSort = (key) => {
     setSortConfig(prev => {
-      if (prev.key === key) {
-        if (prev.direction === 'asc') return { key, direction: 'desc' };
-        if (prev.direction === 'desc') return { key: null, direction: 'asc' }; // default view
-        return { key, direction: 'asc' };
-      }
-      return { key, direction: 'asc' };
+      if (prev.key !== key) return { key, direction: 'asc' };
+      if (prev.direction === 'asc') return { key, direction: 'desc' };
+      return { key: null, direction: 'asc' };
     });
   };
 
-  // Reset to first page if filters or sorting change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchPiece, searchRef, filterState, filterStatus, filterProgram, filterIssues, dateFrom, dateTo, sortConfig]);
+  }, [searchPiece, searchRef, filterState, filterStatus, dateFrom, dateTo, sortConfig]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading validation queue...</div>
+        <div className="text-lg">Loading inspections...</div>
       </div>
     );
   }
 
   return (
     <main className="p-4 md:p-10 w-full">
-      <Title>Validation Queue</Title>
-
+      <Title>Inspections</Title>
       <div className="mt-6 flex flex-col sm:flex-row gap-4 flex-wrap">
         <TextInput
           className="max-w-xs"
@@ -219,18 +154,6 @@ export default function ValidationQueue() {
           value={searchRef}
           onChange={e => setSearchRef(e.target.value)}
         />
-        <Select
-          className="max-w-xs"
-          value={filterProgram}
-          onValueChange={setFilterProgram}
-          placeholder="Program..."
-        >
-          <SelectItem value="">All Programs</SelectItem>
-          {/* Dynamically generate program options */}
-          {[...new Set(inspections.map(i => i.name_program))].map(program => (
-            <SelectItem key={program} value={program}>{program}</SelectItem>
-          ))}
-        </Select>
         <Select
           className="max-w-xs"
           value={filterState}
@@ -253,17 +176,6 @@ export default function ValidationQueue() {
             <SelectItem key={status} value={status}>{status}</SelectItem>
           ))}
         </Select>
-        <Select
-          className="max-w-xs"
-          value={filterIssues}
-          onValueChange={val => setFilterIssues(Array.isArray(val) ? val : [val])}
-          multiple
-          placeholder="Issues..."
-        >
-          <SelectItem value="corrosions">Corrosion</SelectItem>
-          <SelectItem value="dents">Dents</SelectItem>
-          <SelectItem value="scratches">Scratches</SelectItem>
-        </Select>
         <DatePicker
           className="max-w-xs"
           value={dateFrom}
@@ -277,13 +189,11 @@ export default function ValidationQueue() {
           placeholder="To date"
         />
       </div>
-
       {error && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
           <div className="text-red-600 text-sm">{error}</div>
         </div>
       )}
-
       <Card className="mt-6 overflow-x-auto">
         <Table className="w-full min-w-[900px] text-sm">
           <TableHead>
@@ -375,40 +285,13 @@ export default function ValidationQueue() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button
-                        size="xs"
-                        className="px-2 py-1 text-xs"
-                        onClick={() => navigate(`/inspections/${inspection.id_inspection}`)}
-                        disabled={validating}
-                      >
-                        View
-                      </Button>
-                      {inspection.inspection_status === 'PENDING' && (
-                        <>
-                          <Button
-                            size="xs"
-                            color="emerald"
-                            className="px-2 py-1 text-xs"
-                            onClick={() => handleValidate(inspection.id_inspection)}
-                            loading={validating}
-                            disabled={validating}
-                          >
-                            {validating ? 'Validating...' : 'Validate'}
-                          </Button>
-                          <Button
-                            size="xs"
-                            color="red"
-                            className="px-2 py-1 text-xs"
-                            onClick={() => handleReject(inspection.id_inspection)}
-                            loading={validating}
-                            disabled={validating}
-                          >
-                            {validating ? 'Rejecting...' : 'Reject'}
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    <Button
+                      size="xs"
+                      className="px-2 py-1 text-xs"
+                      onClick={() => navigate(`/inspections/${inspection.id_inspection}`)}
+                    >
+                      View
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))

@@ -32,6 +32,7 @@ export default function AdminUsers() {
   });
 
   // Filter states
+  const [idUserFilter, setIdUserFilter] = useState('');
   const [nameFilter, setNameFilter] = useState('');
   const [emailFilter, setEmailFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -168,6 +169,7 @@ export default function AdminUsers() {
     // If statusFilter is unset, default to 'active' users only
     const statusMatch = statusFilter ? status === statusFilter : status === 'active';
     return (
+      (idUserFilter ? String(user.id_user).includes(idUserFilter) : true) &&
       name.includes(nameFilter.toLowerCase()) &&
       email.includes(emailFilter.toLowerCase()) &&
       (roleFilter ? role === roleFilter : true) &&
@@ -279,6 +281,19 @@ export default function AdminUsers() {
             <TableRow>
               <TableHeaderCell>
                 <div className="flex flex-col">
+                  ID
+                  <TextInput
+                    className="mt-1"
+                    placeholder="Search id..."
+                    value={idUserFilter}
+                    onChange={e => setIdUserFilter(e.target.value)}
+                    disabled={saving}
+                    size="sm"
+                  />
+                </div>
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <div className="flex flex-col">
                   Name
                   <TextInput
                     className="mt-1"
@@ -349,6 +364,7 @@ export default function AdminUsers() {
             ) : (
               filteredUsers.map((user) => (
                 <TableRow key={user.id_user}>
+                  <TableCell>{user.id_user}</TableCell>
                   <TableCell>
                     {editingUser?.id_user === user.id_user ? (
                       <div className="space-y-2">
@@ -386,7 +402,6 @@ export default function AdminUsers() {
                         onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
                         disabled={saving}
                       >
-                        <SelectItem value="user">User</SelectItem>
                         <SelectItem value="inspector">Inspector</SelectItem>
                         <SelectItem value="chief">Chief</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>

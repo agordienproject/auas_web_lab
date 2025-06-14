@@ -25,6 +25,7 @@ export default function Layout({ children, userRole }) {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+    { name: 'Inspections', href: '/inspections', icon: ClipboardDocumentCheckIcon },
     { name: 'Profile', href: '/profile', icon: UserIcon },
     ...(userRole === 'admin' ? [
       { name: 'Manage Users', href: '/admin/users', icon: UsersIcon }
@@ -173,7 +174,7 @@ export default function Layout({ children, userRole }) {
         </div>
 
         <div className="lg:ml-[10vw]">
-          <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+          <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 lg:px-8">
             <button
               type="button"
               className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
@@ -192,7 +193,7 @@ export default function Layout({ children, userRole }) {
           </div>
 
           <main className="py-10">
-            <div className="w-[90vw] px-4 sm:px-6 lg:px-8">
+            <div className="max-w-full px-4 sm:px-6 lg:px-8 overflow-x-auto">
               {children}
             </div>
           </main>
