@@ -123,6 +123,21 @@ export default function Dashboard() {
     }
   };
 
+  // For toggling series in Validation Time Distribution
+  const [visibleValidationSeries, setVisibleValidationSeries] = useState(['avg', 'min', 'max']);
+  const validationSeries = [
+    { key: 'avg', label: 'Avg', color: 'blue' },
+    { key: 'min', label: 'Min', color: 'emerald' },
+    { key: 'max', label: 'Max', color: 'rose' },
+  ];
+  const handleToggleValidationSeries = (key) => {
+    setVisibleValidationSeries((prev) =>
+      prev.includes(key)
+        ? prev.filter((k) => k !== key)
+        : [...prev, key]
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -300,6 +315,35 @@ export default function Dashboard() {
                     <SelectItem value="year">Year</SelectItem>
                   </Select>
                 </div>
+                {/* Custom Legend for toggling series */}
+                <div className="flex gap-4 mb-2">
+                  {validationSeries.map((series) => (
+                    <button
+                      key={series.key}
+                      onClick={() => handleToggleValidationSeries(series.key)}
+                      style={{
+                        color: visibleValidationSeries.includes(series.key) ? series.color : '#aaa',
+                        fontWeight: visibleValidationSeries.includes(series.key) ? 'bold' : 'normal',
+                        textDecoration: visibleValidationSeries.includes(series.key) ? 'none' : 'line-through',
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span style={{
+                        display: 'inline-block',
+                        width: 12,
+                        height: 12,
+                        backgroundColor: visibleValidationSeries.includes(series.key) ? series.color : '#eee',
+                        borderRadius: '50%',
+                        marginRight: 6,
+                        border: '1px solid #ccc',
+                        verticalAlign: 'middle',
+                      }} />
+                      {series.label}
+                    </button>
+                  ))}
+                </div>
                 {validationLoading ? (
                   <div>Loading validation time data...</div>
                 ) : validationError ? (
@@ -309,8 +353,8 @@ export default function Dashboard() {
                     className="mt-6"
                     data={validationTimes}
                     index="date"
-                    categories={['avg', 'min', 'max']}
-                    colors={['blue', 'emerald', 'rose']}
+                    categories={visibleValidationSeries}
+                    colors={validationSeries.filter(s => visibleValidationSeries.includes(s.key)).map(s => s.color)}
                     yAxisWidth={60}
                   />
                 )}
