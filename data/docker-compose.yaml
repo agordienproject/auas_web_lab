@@ -6,8 +6,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: lab_inspection
+    restart: always
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata2:/var/lib/postgresql/data
 volumes:

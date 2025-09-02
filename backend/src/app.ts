@@ -8,7 +8,7 @@ import cors from "cors";
 
 const app = express();
 
-const FRONT_END_URL = process.env.FRONTEND_URL || 'http://127.0.0.1:4000';
+const FRONT_END_URL = process.env.FRONTEND_URL || 'http://192.168.3.1:4000';
 
 app.use(express.json());
 app.use(cookieParser());
