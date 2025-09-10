@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000/api',
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:3000/api',
   withCredentials: true, // This is crucial for sending/receiving cookies
   headers: {
     'Content-Type': 'application/json',

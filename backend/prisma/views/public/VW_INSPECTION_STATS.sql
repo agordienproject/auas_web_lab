@@ -1,5 +1,6 @@
 WITH stats AS (
   SELECT
+    1 AS id,
     count(*) AS total_inspections,
     count(
       CASE
@@ -50,7 +51,7 @@ WITH stats AS (
     ("FCT_INSPECTION".deleted = false)
 )
 SELECT
-  1 AS id,
+  id,
   total_inspections,
   validated_inspections,
   pending_inspections,

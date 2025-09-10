@@ -7,6 +7,7 @@ import AdminUsers from './pages/AdminUsers';
 import InspectionDetails from './pages/InspectionDetails';
 import ValidationQueue from './pages/ValidationQueue';
 import Layout from './components/Layout';
+import Inspections from './pages/Inspections';
 
 function App() {
   // Initialize from localStorage if present
@@ -96,6 +97,14 @@ function App() {
           <ProtectedRoute allowedRoles={['chief', 'admin']}>
             <Layout userRole={userRole} key={userRole}>
               <ValidationQueue />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/inspections" element={
+          <ProtectedRoute>
+            <Layout userRole={userRole} key={userRole}>
+              <Inspections />
             </Layout>
           </ProtectedRoute>
         } />

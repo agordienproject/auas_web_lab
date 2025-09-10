@@ -20,6 +20,7 @@ export const getInspections = async (req: Request, res: Response) => {
 // Function to get inspection by id
 export const getInspection = async (req: Request, res: Response) => {
     try {
+        console.log("Fetching inspection by ID");
         const id = req.params.id;
         const response = await inspectionService.getInspectionById(id);
         res.status(200).json(convertBigIntToString(response));
