@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as dashboardService from "../services/dashboard.service";
-import { listImageFiles, getImageStream, isImage } from "../utils/ftp";
+import { listImageFiles, getImageStream, isImage, listMediaFiles, getFileStream, isVideo } from "../utils/ftp";
 
 const convertBigIntToString = (obj: any) => {
     return JSON.parse(JSON.stringify(obj, (_, value) =>
@@ -163,5 +163,46 @@ export const streamInspectionImage = async (req: Request, res: Response) => {
         await getImageStream(folderPath, file, res);
     } catch (error: any) {
         res.status(500).json({ error: error.message || 'Failed to stream image' });
+    }
+};
+
+// List images+videos in an inspection FTP folder
+export const listInspectionMedia = async (req: Request, res: Response) => {
+    try {
+        const folderPath = req.query.folderPath as string;
+        if (!folderPath) {
+            res.status(400).json({ error: 'folderPath query param is required' });
+            return;
+        }
+        const files = await listMediaFiles(folderPath);
+        res.status(200).json(files);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message || 'Failed to list media' });
+    }
+};
+
+// Stream any supported media file
+export const streamInspectionMedia = async (req: Request, res: Response) => {
+    try {
+        const folderPath = req.query.folderPath as string;
+        const file = req.params.file as string;
+        if (!folderPath || !file) {
+            res.status(400).json({ error: 'folderPath query and file param are required' });
+            return;
+        }
+        const lower = file.toLowerCase();
+        const contentType = isImage(file)
+            ? (lower.endsWith('.png') ? 'image/png' : lower.endsWith('.gif') ? 'image/gif' : 'image/jpeg')
+            : isVideo(file)
+                ? (lower.endsWith('.mp4') ? 'video/mp4' : lower.endsWith('.webm') ? 'video/webm' : lower.endsWith('.ogg') ? 'video/ogg' : 'application/octet-stream')
+                : undefined;
+        if (!contentType) {
+            res.status(400).json({ error: 'Unsupported file type' });
+            return;
+        }
+        res.setHeader('Content-Type', contentType);
+        await getFileStream(folderPath, file, res);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message || 'Failed to stream media' });
     }
 };

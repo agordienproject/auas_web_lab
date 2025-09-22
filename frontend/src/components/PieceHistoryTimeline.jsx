@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card, Title, Text, Badge, Button } from '@tremor/react';
-import { ftpService } from '../services';
+import { mediaService } from '../services';
 
 export default function PieceHistoryTimeline({ history = [], currentIndex = 0, onPrev, onNext }) {
   const current = history[currentIndex] || null;
   const total = history.length;
-  const [images, setImages] = useState([]);
-  const [imgLoading, setImgLoading] = useState(false);
-  const [imgError, setImgError] = useState(null);
+  const [media, setMedia] = useState([]); // {name,url,type}
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaError, setMediaError] = useState(null);
 
   const header = useMemo(() => {
     if (!current) return 'No history available';
@@ -19,19 +19,19 @@ export default function PieceHistoryTimeline({ history = [], currentIndex = 0, o
     const load = async () => {
       const folder = current?.inspection_path;
       if (!folder) {
-        if (mounted) { setImages([]); setImgError(null); }
+        if (mounted) { setMedia([]); setMediaError(null); }
         return;
       }
-      setImgLoading(true);
-      setImgError(null);
+      setMediaLoading(true);
+      setMediaError(null);
       try {
-        const list = await ftpService.listInspectionImages(folder);
-        const urls = (list || []).map(f => ({ name: f.name, url: ftpService.imageUrl(folder, f.name) }));
-        if (mounted) setImages(urls);
+        const list = await mediaService.list(folder);
+        const urls = (list || []).map(f => ({ name: f.name, type: f.type, url: mediaService.mediaUrl(folder, f.name) }));
+        if (mounted) setMedia(urls);
       } catch (e) {
-        if (mounted) setImgError(e.message || 'Failed to load images');
+        if (mounted) setMediaError(e.message || 'Failed to load media');
       } finally {
-        if (mounted) setImgLoading(false);
+        if (mounted) setMediaLoading(false);
       }
     };
     load();
@@ -108,20 +108,30 @@ export default function PieceHistoryTimeline({ history = [], currentIndex = 0, o
             <div className="md:col-span-2"><strong>Details:</strong> {current.details || '-'}</div>
           </div>
 
-          {/* Images gallery */}
+          {/* Media gallery: images + videos */}
           <div className="mt-4">
-            <Title className="text-base">Inspection Images</Title>
-            {imgLoading && <Text>Loading images...</Text>}
-            {imgError && <Text className="text-red-600">{imgError}</Text>}
-            {!imgLoading && !imgError && images.length > 0 && (
+            <Title className="text-base">Inspection Media</Title>
+            {mediaLoading && <Text>Loading media...</Text>}
+            {mediaError && <Text className="text-red-600">{mediaError}</Text>}
+            {!mediaLoading && !mediaError && media.length > 0 && (
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {images.map(img => (
-                  <img key={img.name} src={img.url} alt={img.name} className="w-full h-56 object-cover rounded" />
+                {media.map(m => (
+                  <div key={m.name} className="w-full h-80 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                    {m.type === 'image' ? (
+                      <img src={m.url} alt={m.name} loading="lazy" className="max-h-full max-w-full object-contain" />
+                    ) : (
+                      <video
+                        src={m.url}
+                        controls
+                        className="max-h-full max-w-full object-contain bg-black"
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
             )}
-            {!imgLoading && !imgError && images.length === 0 && (
-              <Text className="text-sm text-gray-500 mt-2">No images found in inspection folder.</Text>
+            {!mediaLoading && !mediaError && media.length === 0 && (
+              <Text className="text-sm text-gray-500 mt-2">No media found in inspection folder.</Text>
             )}
           </div>
         </div>

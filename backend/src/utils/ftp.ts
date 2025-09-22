@@ -24,10 +24,20 @@ export async function withFtpClient<T>(fn: (client: Client) => Promise<T>): Prom
 }
 
 const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+const VIDEO_EXTS = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
 
 export function isImage(name: string) {
   const lower = name.toLowerCase();
   return IMAGE_EXTS.some(ext => lower.endsWith(ext));
+}
+
+export function isVideo(name: string) {
+  const lower = name.toLowerCase();
+  return VIDEO_EXTS.some(ext => lower.endsWith(ext));
+}
+
+export function isMedia(name: string) {
+  return isImage(name) || isVideo(name);
 }
 
 function extractFtpPath(folderPath: string) {
@@ -55,7 +65,25 @@ export async function listImageFiles(folderPath: string) {
   });
 }
 
+export async function listMediaFiles(folderPath: string) {
+  return await withFtpClient(async (client) => {
+    const path = extractFtpPath(folderPath);
+    const list = await client.list(path);
+    return list
+      .filter(item => item.isFile && isMedia(item.name))
+      .map(item => ({ name: item.name, size: item.size, type: isImage(item.name) ? 'image' : 'video' }));
+  });
+}
+
 export async function getImageStream(folderPath: string, fileName: string, writable: NodeJS.WritableStream) {
+  return await withFtpClient(async (client) => {
+    const base = extractFtpPath(folderPath);
+    const full = base.endsWith('/') ? `${base}${fileName}` : `${base}/${fileName}`;
+    await client.downloadTo(writable as any, full);
+  });
+}
+
+export async function getFileStream(folderPath: string, fileName: string, writable: NodeJS.WritableStream) {
   return await withFtpClient(async (client) => {
     const base = extractFtpPath(folderPath);
     const full = base.endsWith('/') ? `${base}${fileName}` : `${base}/${fileName}`;
