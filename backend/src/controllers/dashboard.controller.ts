@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as dashboardService from "../services/dashboard.service";
+import { listImageFiles, getImageStream, isImage } from "../utils/ftp";
 
 const convertBigIntToString = (obj: any) => {
     return JSON.parse(JSON.stringify(obj, (_, value) =>
@@ -94,6 +95,21 @@ export const getPieceHistory = async (req: Request, res: Response) => {
     }
 };
 
+// Get detailed piece history for a specific ref_piece
+export const getPieceHistoryDetail = async (req: Request, res: Response) => {
+    try {
+        const ref_piece = req.params.ref_piece;
+        if (!ref_piece) {
+            res.status(400).json({ error: 'ref_piece is required' });
+            return;
+        }
+        const detail = await dashboardService.getPieceHistoryDetailByRef(ref_piece);
+        res.status(200).json(convertBigIntToString(detail));
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch piece history detail' });
+    }
+};
+
 // Controller to get validation time distribution
 export const getValidationTimeDistribution = async (req: Request, res: Response) => {
     try {
@@ -107,5 +123,45 @@ export const getValidationTimeDistribution = async (req: Request, res: Response)
         res.status(200).json(convertBigIntToString(data));
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};
+
+// List images in an inspection FTP folder (by passing folderPath)
+export const listInspectionImages = async (req: Request, res: Response) => {
+    try {
+        console.log("Listing inspection images");
+        const folderPath = req.query.folderPath as string;
+        if (!folderPath) {
+            res.status(400).json({ error: 'folderPath query param is required' });
+            return;
+        }
+        const files = await listImageFiles(folderPath);
+        res.status(200).json(files);
+    } catch (error: any) {
+        console.error("Error listing inspection images:", error);
+        res.status(500).json({ error: error.message || 'Failed to list images' });
+    }
+};
+
+// Stream a specific image file from the FTP folder
+export const streamInspectionImage = async (req: Request, res: Response) => {
+    try {
+        const folderPath = req.query.folderPath as string;
+        const file = req.params.file as string;
+        if (!folderPath || !file) {
+            res.status(400).json({ error: 'folderPath query and file param are required' });
+            return;
+        }
+        if (!isImage(file)) {
+            res.status(400).json({ error: 'Unsupported file type' });
+            return;
+        }
+        const contentType = file.toLowerCase().endsWith('.png') ? 'image/png'
+            : file.toLowerCase().endsWith('.gif') ? 'image/gif'
+            : 'image/jpeg';
+        res.setHeader('Content-Type', contentType);
+        await getImageStream(folderPath, file, res);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message || 'Failed to stream image' });
     }
 };

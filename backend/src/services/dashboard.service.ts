@@ -47,6 +47,14 @@ export const getPieceHistorySummaryByRef = async (ref_piece: string) => {
     });
 };
 
+// Get detailed piece history (all DIM_PIECE versions) for a specific piece
+export const getPieceHistoryDetailByRef = async (ref_piece: string) => {
+    return await prismaPSQL.dIM_PIECE.findMany({
+        where: { ref_piece, deleted: false },
+        orderBy: { start_date: 'asc' },
+    });
+};
+
 // Get validation time distribution for inspections
 export const getValidationTimeDistribution = async (
     from?: string,

@@ -18,7 +18,12 @@ router.get("/inspectors", dashboardController.getInspectorPerformance);
 router.get("/trends", dashboardController.getDailyTrends);
 router.get("/piece-history", dashboardController.getPieceHistory);
 router.get("/piece-history/:ref_piece", dashboardController.getPieceHistory);
+router.get("/piece-history/:ref_piece/detail", dashboardController.getPieceHistoryDetail);
 // Route to get validation time distribution
 router.get('/validation-times', dashboardController.getValidationTimeDistribution);
+
+// FTP images endpoints
+router.get('/inspection-images', dashboardController.listInspectionImages);
+router.get('/inspection-images/:file', dashboardController.streamInspectionImage);
 
 export default router;

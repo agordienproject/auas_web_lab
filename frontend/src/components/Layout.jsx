@@ -26,6 +26,7 @@ export default function Layout({ children, userRole }) {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
     { name: 'Inspections', href: '/inspections', icon: ClipboardDocumentCheckIcon },
+    { name: 'Pieces', href: '/pieces', icon: ClipboardDocumentCheckIcon },
     { name: 'Profile', href: '/profile', icon: UserIcon },
     ...(userRole === 'admin' ? [
       { name: 'Manage Users', href: '/admin/users', icon: UsersIcon }
