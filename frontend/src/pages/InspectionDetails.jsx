@@ -14,6 +14,7 @@ import {
 } from '@tremor/react';
 import { inspectionService } from '../services';
 import userService from '../services/userService';
+// Piece history view moved to dedicated pages; no longer used here
 
 export default function InspectionDetails() {
   const { id } = useParams();
@@ -25,6 +26,7 @@ export default function InspectionDetails() {
   const [editedInspection, setEditedInspection] = useState(null);
   const [inspectorName, setInspectorName] = useState('');
   const [validatorName, setValidatorName] = useState('');
+  // No tabs; this page is focused on inspection details only
 
   const fetchInspectionDetails = useCallback(async () => {
     try {
@@ -85,6 +87,8 @@ export default function InspectionDetails() {
   const editableFields = [
     'name_piece', 'ref_piece', 'name_program', 'state', 'dents', 'corrosions', 'scratches', 'details', 'inspection_path'
   ];
+
+  // Piece history removed from this page
 
   if (loading) {
     return (
@@ -153,189 +157,191 @@ export default function InspectionDetails() {
         </div>
       )}
 
-      <Grid numItemsMd={2} numItemsLg={3} className="gap-6">
-        <Card>
-          <Title>Piece</Title>
-          {isEditing ? (
-            <TextInput
-              value={editedInspection.name_piece || ''}
-              onChange={e => setEditedInspection({ ...editedInspection, name_piece: e.target.value })}
-              disabled={saving}
-            />
-          ) : (
-            <Text className="mt-2">{inspection.name_piece}</Text>
-          )}
-        </Card>
-        <Card>
-          <Title>Reference</Title>
-          {isEditing ? (
-            <TextInput
-              value={editedInspection.ref_piece || ''}
-              onChange={e => setEditedInspection({ ...editedInspection, ref_piece: e.target.value })}
-              disabled={saving}
-            />
-          ) : (
-            <Text className="mt-2">{inspection.ref_piece}</Text>
-          )}
-        </Card>
-        <Card>
-          <Title>Program</Title>
-          {isEditing ? (
-            <TextInput
-              value={editedInspection.name_program || ''}
-              onChange={e => setEditedInspection({ ...editedInspection, name_program: e.target.value })}
-              disabled={saving}
-            />
-          ) : (
-            <Text className="mt-2">{inspection.name_program}</Text>
-          )}
-        </Card>
-        <Card>
-          <Title>State</Title>
-          {isEditing ? (
-            <select
-              className="w-full border rounded p-2 mt-2"
-              value={editedInspection.state || ''}
-              onChange={e => setEditedInspection({ ...editedInspection, state: e.target.value })}
-              disabled={saving}
-            >
-              <option value="">Select state...</option>
-              <option value="Perfect">Perfect</option>
-              <option value="Almost perfect">Almost perfect</option>
-              <option value="Good">Good</option>
-              <option value="Average">Average</option>
-              <option value="Not good">Not good</option>
-              <option value="Really bad">Really bad</option>
-              <option value="Destroyed">Destroyed</option>
-            </select>
-          ) : (
-            <Text className="mt-2">{inspection.state}</Text>
-          )}
-        </Card>
-        <Card>
-          <Title>Inspector</Title>
-          <Text className="mt-2">{inspectorName}</Text>
-        </Card>
-        <Card>
-          <Title>Date</Title>
-          <Text className="mt-2">{new Date(inspection.inspection_date).toLocaleDateString()}</Text>
-        </Card>
-        <Card>
-          <Title>Issues</Title>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {isEditing ? (
-              <>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editedInspection.dents || false}
-                    onChange={e => setEditedInspection({ ...editedInspection, dents: e.target.checked })}
-                    disabled={saving}
-                  />
-                  <Text>Dents</Text>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editedInspection.corrosions || false}
-                    onChange={e => setEditedInspection({ ...editedInspection, corrosions: e.target.checked })}
-                    disabled={saving}
-                  />
-                  <Text>Corrosion</Text>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editedInspection.scratches || false}
-                    onChange={e => setEditedInspection({ ...editedInspection, scratches: e.target.checked })}
-                    disabled={saving}
-                  />
-                  <Text>Scratches</Text>
-                </label>
-              </>
-            ) : (
-              <>
-                {inspection.dents && <Badge color="red">Dents</Badge>}
-                {inspection.corrosions && <Badge color="red">Corrosion</Badge>}
-                {inspection.scratches && <Badge color="red">Scratches</Badge>}
-                {!inspection.dents && !inspection.corrosions && !inspection.scratches && (
-                  <Badge color="emerald">No Issues</Badge>
-                )}
-              </>
-            )}
-          </div>
-        </Card>
-        <Card>
-          <Title>Validated By</Title>
-          <Text className="mt-2">{validatorName}</Text>
-        </Card>
-        <Card>
-          <Title>Validation Date</Title>
-          <Text className="mt-2">{inspection.validation_date ? new Date(inspection.validation_date).toLocaleDateString() : '-'}</Text>
-        </Card>
-        <Card className="col-span-full">
-          <Title>Details</Title>
-          {isEditing ? (
-            <Textarea
-              className="mt-2"
-              value={editedInspection.details || ''}
-              onChange={e => setEditedInspection({ ...editedInspection, details: e.target.value })}
-              rows={4}
-              disabled={saving}
-            />
-          ) : (
-            <Text className="mt-2 whitespace-pre-wrap">{inspection.details || '-'}</Text>
-          )}
-        </Card>
-        <Card className="col-span-full">
-          <Title>Inspection Path</Title>
-          {isEditing ? (
-            <Textarea
-              className="mt-2"
-              value={editedInspection.inspection_path || ''}
-              onChange={e => setEditedInspection({ ...editedInspection, inspection_path: e.target.value })}
-              rows={2}
-              disabled={saving}
-            />
-          ) : (
-            <Text className="mt-2 whitespace-pre-wrap">{inspection.inspection_path || '-'}</Text>
-          )}
-        </Card>
-        {inspection.images && inspection.images.length > 0 && (
-          <Card className="col-span-full">
-            <Title>Images</Title>
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {inspection.images.map((image, index) => (
-                <img
-                  key={index}
-                  src={image}
-                  alt={`Inspection ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-lg"
+      <>
+          <Grid numItemsMd={2} numItemsLg={3} className="gap-6">
+            <Card>
+              <Title>Piece</Title>
+              {isEditing ? (
+                <TextInput
+                  value={editedInspection.name_piece || ''}
+                  onChange={e => setEditedInspection({ ...editedInspection, name_piece: e.target.value })}
+                  disabled={saving}
                 />
-              ))}
-            </div>
-          </Card>
-        )}
-        {inspection && (
-          <Card className="col-span-full">
-            <Title>Technical Information</Title>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 text-xs">
-              <div>
-                <strong>Created by (user ID):</strong> {inspection.user_creation}
+              ) : (
+                <Text className="mt-2">{inspection.name_piece}</Text>
+              )}
+            </Card>
+            <Card>
+              <Title>Reference</Title>
+              {isEditing ? (
+                <TextInput
+                  value={editedInspection.ref_piece || ''}
+                  onChange={e => setEditedInspection({ ...editedInspection, ref_piece: e.target.value })}
+                  disabled={saving}
+                />
+              ) : (
+                <Text className="mt-2">{inspection.ref_piece}</Text>
+              )}
+            </Card>
+            <Card>
+              <Title>Program</Title>
+              {isEditing ? (
+                <TextInput
+                  value={editedInspection.name_program || ''}
+                  onChange={e => setEditedInspection({ ...editedInspection, name_program: e.target.value })}
+                  disabled={saving}
+                />
+              ) : (
+                <Text className="mt-2">{inspection.name_program}</Text>
+              )}
+            </Card>
+            <Card>
+              <Title>State</Title>
+              {isEditing ? (
+                <select
+                  className="w-full border rounded p-2 mt-2"
+                  value={editedInspection.state || ''}
+                  onChange={e => setEditedInspection({ ...editedInspection, state: e.target.value })}
+                  disabled={saving}
+                >
+                  <option value="">Select state...</option>
+                  <option value="Perfect">Perfect</option>
+                  <option value="Almost perfect">Almost perfect</option>
+                  <option value="Good">Good</option>
+                  <option value="Average">Average</option>
+                  <option value="Not good">Not good</option>
+                  <option value="Really bad">Really bad</option>
+                  <option value="Destroyed">Destroyed</option>
+                </select>
+              ) : (
+                <Text className="mt-2">{inspection.state}</Text>
+              )}
+            </Card>
+            <Card>
+              <Title>Inspector</Title>
+              <Text className="mt-2">{inspectorName}</Text>
+            </Card>
+            <Card>
+              <Title>Date</Title>
+              <Text className="mt-2">{new Date(inspection.inspection_date).toLocaleDateString()}</Text>
+            </Card>
+            <Card>
+              <Title>Issues</Title>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {isEditing ? (
+                  <>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editedInspection.dents || false}
+                        onChange={e => setEditedInspection({ ...editedInspection, dents: e.target.checked })}
+                        disabled={saving}
+                      />
+                      <Text>Dents</Text>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editedInspection.corrosions || false}
+                        onChange={e => setEditedInspection({ ...editedInspection, corrosions: e.target.checked })}
+                        disabled={saving}
+                      />
+                      <Text>Corrosion</Text>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editedInspection.scratches || false}
+                        onChange={e => setEditedInspection({ ...editedInspection, scratches: e.target.checked })}
+                        disabled={saving}
+                      />
+                      <Text>Scratches</Text>
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    {inspection.dents && <Badge color="red">Dents</Badge>}
+                    {inspection.corrosions && <Badge color="red">Corrosion</Badge>}
+                    {inspection.scratches && <Badge color="red">Scratches</Badge>}
+                    {!inspection.dents && !inspection.corrosions && !inspection.scratches && (
+                      <Badge color="emerald">No Issues</Badge>
+                    )}
+                  </>
+                )}
               </div>
-              <div>
-                <strong>Creation date:</strong> {inspection.creation_date ? new Date(inspection.creation_date).toLocaleString() : '-'}
-              </div>
-              <div>
-                <strong>Last modified by (user ID):</strong> {inspection.user_modification}
-              </div>
-              <div>
-                <strong>Last modification date:</strong> {inspection.modification_date ? new Date(inspection.modification_date).toLocaleString() : '-'}
-              </div>
-            </div>
-          </Card>
-        )}
-      </Grid>
+            </Card>
+            <Card>
+              <Title>Validated By</Title>
+              <Text className="mt-2">{validatorName}</Text>
+            </Card>
+            <Card>
+              <Title>Validation Date</Title>
+              <Text className="mt-2">{inspection.validation_date ? new Date(inspection.validation_date).toLocaleDateString() : '-'}</Text>
+            </Card>
+            <Card className="col-span-full">
+              <Title>Details</Title>
+              {isEditing ? (
+                <Textarea
+                  className="mt-2"
+                  value={editedInspection.details || ''}
+                  onChange={e => setEditedInspection({ ...editedInspection, details: e.target.value })}
+                  rows={4}
+                  disabled={saving}
+                />
+              ) : (
+                <Text className="mt-2 whitespace-pre-wrap">{inspection.details || '-'}</Text>
+              )}
+            </Card>
+            <Card className="col-span-full">
+              <Title>Inspection Path</Title>
+              {isEditing ? (
+                <Textarea
+                  className="mt-2"
+                  value={editedInspection.inspection_path || ''}
+                  onChange={e => setEditedInspection({ ...editedInspection, inspection_path: e.target.value })}
+                  rows={2}
+                  disabled={saving}
+                />
+              ) : (
+                <Text className="mt-2 whitespace-pre-wrap">{inspection.inspection_path || '-'}</Text>
+              )}
+            </Card>
+            {inspection.images && inspection.images.length > 0 && (
+              <Card className="col-span-full">
+                <Title>Images</Title>
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {inspection.images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`Inspection ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                  ))}
+                </div>
+              </Card>
+            )}
+            {inspection && (
+              <Card className="col-span-full">
+                <Title>Technical Information</Title>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 text-xs">
+                  <div>
+                    <strong>Created by (user ID):</strong> {inspection.user_creation}
+                  </div>
+                  <div>
+                    <strong>Creation date:</strong> {inspection.creation_date ? new Date(inspection.creation_date).toLocaleString() : '-'}
+                  </div>
+                  <div>
+                    <strong>Last modified by (user ID):</strong> {inspection.user_modification}
+                  </div>
+                  <div>
+                    <strong>Last modification date:</strong> {inspection.modification_date ? new Date(inspection.modification_date).toLocaleString() : '-'}
+                  </div>
+                </div>
+              </Card>
+            )}
+          </Grid>
+      </>
     </main>
   );
 }

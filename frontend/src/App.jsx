@@ -8,6 +8,8 @@ import InspectionDetails from './pages/InspectionDetails';
 import ValidationQueue from './pages/ValidationQueue';
 import Layout from './components/Layout';
 import Inspections from './pages/Inspections';
+import Pieces from './pages/Pieces';
+import PieceHistory from './pages/PieceHistory';
 
 function App() {
   // Initialize from localStorage if present
@@ -105,6 +107,22 @@ function App() {
           <ProtectedRoute>
             <Layout userRole={userRole} key={userRole}>
               <Inspections />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/pieces" element={
+          <ProtectedRoute>
+            <Layout userRole={userRole} key={userRole}>
+              <Pieces />
+            </Layout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/pieces/:ref" element={
+          <ProtectedRoute>
+            <Layout userRole={userRole} key={userRole}>
+              <PieceHistory />
             </Layout>
           </ProtectedRoute>
         } />
