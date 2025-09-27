@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import * as dashboardService from "../services/dashboard.service";
-import { listImageFiles, getImageStream, isImage, listMediaFiles, getFileStream, isVideo } from "../utils/ftp";
+import { listImageFiles, getImageStream, isImage, listMediaFiles, getFileStream, isVideo, listPlyCleanedFiles, isPlyCleaned, fileExists, getTextFile } from "../utils/ftp";
 
 const convertBigIntToString = (obj: any) => {
     return JSON.parse(JSON.stringify(obj, (_, value) =>
@@ -204,5 +204,115 @@ export const streamInspectionMedia = async (req: Request, res: Response) => {
         await getFileStream(folderPath, file, res);
     } catch (error: any) {
         res.status(500).json({ error: error.message || 'Failed to stream media' });
+    }
+};
+
+// List cleaned PLY files (ending with _cleaned.ply) in an inspection folder
+export const listInspectionScans = async (req: Request, res: Response) => {
+    try {
+        const folderPath = req.query.folderPath as string;
+        if (!folderPath) {
+            res.status(400).json({ error: 'folderPath query param is required' });
+            return;
+        }
+        const files = await listPlyCleanedFiles(folderPath);
+        res.status(200).json(files);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message || 'Failed to list PLY scans' });
+    }
+};
+
+// Stream a PLY cleaned file
+export const streamInspectionScan = async (req: Request, res: Response) => {
+    try {
+        const folderPath = req.query.folderPath as string;
+        // Support both route param :file and query param relativePath for nested files
+        const file = (req.query.relativePath as string) || (req.params.file as string);
+        if (!folderPath || !file) {
+            res.status(400).json({ error: 'folderPath query and file param are required' });
+            return;
+        }
+        if (!isPlyCleaned(file)) {
+            res.status(400).json({ error: 'Unsupported file type (expected *_cleaned.ply)' });
+            return;
+        }
+        res.setHeader('Content-Type', 'application/octet-stream');
+        await getFileStream(folderPath, file, res);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message || 'Failed to stream PLY file' });
+    }
+};
+
+// Parse scan_analysis_report.txt from an inspection folder
+export const getInspectionScanReport = async (req: Request, res: Response) => {
+    try {
+        const folderPath = req.query.folderPath as string;
+        if (!folderPath) {
+            res.status(400).json({ error: 'folderPath query param is required' });
+            return;
+        }
+        const reportName = 'scan_analysis_report.txt';
+        const exists = await fileExists(folderPath, reportName);
+        if (!exists) {
+            res.status(404).json({ error: 'scan_analysis_report.txt not found' });
+            return;
+        }
+        const text = await getTextFile(folderPath, reportName);
+        // Parse key metrics from the sample format provided
+        const lines = text.split(/\r?\n/);
+        const result: any = {
+            pieceReference: undefined,
+            similarityScore: undefined,
+            meanDistance: undefined,
+            centroidDistance: undefined,
+            pointCountRatio: undefined,
+            quality: undefined,
+        };
+
+        // Piece Reference: <value>
+        const refLine = lines.find(l => l.includes('Piece Reference'));
+        if (refLine) {
+            const m = refLine.match(/Piece Reference:\s*(.+)$/);
+            if (m) result.pieceReference = m[1].trim();
+        }
+
+        // Similarity Score: 100.0%
+        const simLine = lines.find(l => l.includes('Similarity Score'));
+        if (simLine) {
+            const m = simLine.match(/Similarity Score:\s*([0-9]+(?:\.[0-9]+)?)%/);
+            if (m) result.similarityScore = parseFloat(m[1]);
+        }
+
+        // Mean Distance: 0.00mm
+        const meanLine = lines.find(l => l.includes('Mean Distance'));
+        if (meanLine) {
+            const m = meanLine.match(/Mean Distance:\s*([0-9]+(?:\.[0-9]+)?)mm/);
+            if (m) result.meanDistance = parseFloat(m[1]);
+        }
+
+        // Centroid Distance: 0.00mm
+        const centLine = lines.find(l => l.includes('Centroid Distance'));
+        if (centLine) {
+            const m = centLine.match(/Centroid Distance:\s*([0-9]+(?:\.[0-9]+)?)mm/);
+            if (m) result.centroidDistance = parseFloat(m[1]);
+        }
+
+        // Point Count Ratio: 1.00
+        const ratioLine = lines.find(l => l.includes('Point Count Ratio'));
+        if (ratioLine) {
+            const m = ratioLine.match(/Point Count Ratio:\s*([0-9]+(?:\.[0-9]+)?)/);
+            if (m) result.pointCountRatio = parseFloat(m[1]);
+        }
+
+        // QUALITY: EXCELLENT
+        const qualLine = lines.find(l => l.includes('QUALITY:'));
+        if (qualLine) {
+            const m = qualLine.match(/QUALITY:\s*(\w+)/);
+            if (m) result.quality = m[1];
+        }
+
+        res.status(200).json(result);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message || 'Failed to parse scan report' });
     }
 };

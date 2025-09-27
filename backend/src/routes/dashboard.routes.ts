@@ -29,4 +29,9 @@ router.get('/inspection-images/:file', dashboardController.streamInspectionImage
 router.get('/inspection-media', dashboardController.listInspectionMedia);
 router.get('/inspection-media/:file', dashboardController.streamInspectionMedia);
 
+// PLY scans and analysis report
+router.get('/inspection-scans', dashboardController.listInspectionScans);
+router.get('/inspection-scans/:file', dashboardController.streamInspectionScan);
+router.get('/inspection-scan-report', dashboardController.getInspectionScanReport);
+
 export default router;

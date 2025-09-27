@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Card, Title, Text, Badge, Button } from '@tremor/react';
 import { mediaService } from '../services';
+import PLYViewer from './PLYViewer';
 
 export default function PieceHistoryTimeline({ history = [], currentIndex = 0, onPrev, onNext }) {
   const current = history[currentIndex] || null;
@@ -8,6 +9,8 @@ export default function PieceHistoryTimeline({ history = [], currentIndex = 0, o
   const [media, setMedia] = useState([]); // {name,url,type}
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaError, setMediaError] = useState(null);
+  const [scans, setScans] = useState([]); // {name,url}
+  const [scanReport, setScanReport] = useState(null);
 
   const header = useMemo(() => {
     if (!current) return 'No history available';
@@ -19,7 +22,7 @@ export default function PieceHistoryTimeline({ history = [], currentIndex = 0, o
     const load = async () => {
       const folder = current?.inspection_path;
       if (!folder) {
-        if (mounted) { setMedia([]); setMediaError(null); }
+        if (mounted) { setMedia([]); setScans([]); setScanReport(null); setMediaError(null); }
         return;
       }
       setMediaLoading(true);
@@ -28,6 +31,12 @@ export default function PieceHistoryTimeline({ history = [], currentIndex = 0, o
         const list = await mediaService.list(folder);
         const urls = (list || []).map(f => ({ name: f.name, type: f.type, url: mediaService.mediaUrl(folder, f.name) }));
         if (mounted) setMedia(urls);
+
+        // Load scans and report
+  const slist = await mediaService.listScans(folder);
+  const scansWithUrl = (slist || []).map(f => ({ name: f.name, url: mediaService.scanUrl(folder, f.relativePath || f.name) }));
+        const report = await mediaService.getScanReport(folder).catch(() => null);
+        if (mounted) { setScans(scansWithUrl); setScanReport(report); }
       } catch (e) {
         if (mounted) setMediaError(e.message || 'Failed to load media');
       } finally {
@@ -132,6 +141,36 @@ export default function PieceHistoryTimeline({ history = [], currentIndex = 0, o
             )}
             {!mediaLoading && !mediaError && media.length === 0 && (
               <Text className="text-sm text-gray-500 mt-2">No media found in inspection folder.</Text>
+            )}
+          </div>
+
+          {/* 3D Scan (PLY) */}
+          <div className="mt-6">
+            <Title className="text-base">3D Scan</Title>
+            {scans.length > 0 ? (
+              <div className="mt-3">
+                <PLYViewer url={scans[0].url} height={360} />
+                <Text className="text-xs text-gray-500 mt-1">Showing: {scans[0].name}</Text>
+              </div>
+            ) : (
+              <Text className="text-sm text-gray-500 mt-2">No cleaned PLY scan found.</Text>
+            )}
+          </div>
+
+          {/* Scan analysis report */}
+          <div className="mt-6">
+            <Title className="text-base">Scan Analysis</Title>
+            {scanReport ? (
+              <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                <div><strong>Piece Reference:</strong> {scanReport.pieceReference ?? '-'}</div>
+                <div><strong>Similarity Score:</strong> {typeof scanReport.similarityScore === 'number' ? `${scanReport.similarityScore}%` : '-'}</div>
+                <div><strong>Mean Distance:</strong> {typeof scanReport.meanDistance === 'number' ? `${scanReport.meanDistance} mm` : '-'}</div>
+                <div><strong>Centroid Distance:</strong> {typeof scanReport.centroidDistance === 'number' ? `${scanReport.centroidDistance} mm` : '-'}</div>
+                <div><strong>Point Count Ratio:</strong> {typeof scanReport.pointCountRatio === 'number' ? scanReport.pointCountRatio : '-'}</div>
+                <div><strong>Quality:</strong> {scanReport.quality ?? '-'}</div>
+              </div>
+            ) : (
+              <Text className="text-sm text-gray-500 mt-2">No scan report found.</Text>
             )}
           </div>
         </div>
