@@ -143,14 +143,13 @@ view VW_PIECE_HISTORY_SUMMARY {
   total_dents_reported      BigInt?
   total_corrosions_reported BigInt?
   total_scratches_reported  BigInt?
-
 }
 
 /// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 view VW_VALIDATION_TIME_DISTRIBUTION {
-  validation_day         DateTime  @id @db.Date
+  validation_day         DateTime @id @db.Date
   validated_count        BigInt?
-  avg_validation_minutes Decimal?  @db.Decimal
-  min_validation_minutes Decimal?  @db.Decimal
-  max_validation_minutes Decimal?  @db.Decimal
+  avg_validation_minutes Decimal? @db.Decimal
+  min_validation_minutes Decimal? @db.Decimal
+  max_validation_minutes Decimal? @db.Decimal
 }

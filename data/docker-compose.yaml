@@ -3,13 +3,13 @@ services:
     image: postgres:latest
     container_name: postgres_db_lab
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: lab_inspection
+      POSTGRES_USER: salut
+      POSTGRES_PASSWORD: salut
+      POSTGRES_DB: salut
     restart: always
     ports:
-      - "5432:5432"
+    - 5434:5432
     volumes:
-      - pgdata2:/var/lib/postgresql/data
+    - pgdata:/var/lib/postgresql/data
 volumes:
-  pgdata2:
+  pgdata: null
