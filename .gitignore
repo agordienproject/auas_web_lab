@@ -3,5 +3,5 @@ backend/prisma/generated/postgresql
 backend/node_modules
 package-lock.json
 
-
+docker-compose.yaml
 node_modules
