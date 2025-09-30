@@ -1,15 +1,15 @@
 services:
-  postgres_db_lab:
+  caca:
     image: postgres:latest
-    container_name: postgres_db_lab
+    container_name: caca
     environment:
-      POSTGRES_USER: salut
-      POSTGRES_PASSWORD: salut
-      POSTGRES_DB: salut
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: lab_inspection
     restart: always
     ports:
-    - 5434:5432
+    - 5436:5432
     volumes:
-    - pgdata:/var/lib/postgresql/data
+    - caca:/var/lib/postgresql/data
 volumes:
-  pgdata: null
+  caca: null
