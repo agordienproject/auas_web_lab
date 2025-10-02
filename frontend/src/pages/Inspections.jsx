@@ -25,6 +25,7 @@ export default function Inspections() {
   const [error, setError] = useState(null);
   const [searchPiece, setSearchPiece] = useState('');
   const [searchRef, setSearchRef] = useState('');
+  const [searchId, setSearchId] = useState('');
   const [filterState, setFilterState] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,6 +78,7 @@ export default function Inspections() {
 
   // Filtering logic
   const filteredInspections = inspections.filter(inspection => {
+    const idStr = inspection.id_inspection != null ? String(inspection.id_inspection) : '';
     const piece = inspection.name_piece?.toLowerCase() || '';
     const ref = inspection.ref_piece?.toLowerCase() || '';
     const state = inspection.state || '';
@@ -86,6 +88,7 @@ export default function Inspections() {
     if (dateFrom && inspectionDate && inspectionDate < new Date(dateFrom)) return false;
     if (dateTo && inspectionDate && inspectionDate > new Date(dateTo)) return false;
     return (
+      idStr.includes(searchId.trim()) &&
       piece.includes(searchPiece.toLowerCase()) &&
       ref.includes(searchRef.toLowerCase()) &&
       (filterState ? state === filterState : true) &&
@@ -128,7 +131,7 @@ export default function Inspections() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchPiece, searchRef, filterState, filterStatus, dateFrom, dateTo, sortConfig]);
+  }, [searchId, searchPiece, searchRef, filterState, filterStatus, dateFrom, dateTo, sortConfig]);
 
   if (loading) {
     return (
@@ -142,6 +145,12 @@ export default function Inspections() {
     <main className="p-4 md:p-10 w-full">
       <Title>Inspections</Title>
       <div className="mt-6 flex flex-col sm:flex-row gap-4 flex-wrap">
+        <TextInput
+          className="max-w-xs"
+          placeholder="Inspection ID..."
+          value={searchId}
+          onChange={e => setSearchId(e.target.value)}
+        />
         <TextInput
           className="max-w-xs"
           placeholder="Piece name..."
@@ -199,6 +208,14 @@ export default function Inspections() {
           <TableHead>
             <TableRow>
               <TableHeaderCell>
+                <button type="button" className="flex items-center gap-1" onClick={() => handleSort('id_inspection')}>
+                  ID
+                  {sortConfig.key === 'id_inspection' && (
+                    <span>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                  )}
+                </button>
+              </TableHeaderCell>
+              <TableHeaderCell>
                 <button type="button" className="flex items-center gap-1" onClick={() => handleSort('name_piece')}>
                   Piece
                   {sortConfig.key === 'name_piece' && (
@@ -253,13 +270,14 @@ export default function Inspections() {
           <TableBody>
             {paginatedInspections.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                   No inspections found
                 </TableCell>
               </TableRow>
             ) : (
               paginatedInspections.map((inspection) => (
                 <TableRow key={inspection.id_inspection}>
+                  <TableCell>{inspection.id_inspection}</TableCell>
                   <TableCell>{inspection.name_piece}</TableCell>
                   <TableCell>{inspection.ref_piece}</TableCell>
                   <TableCell>{inspection.state}</TableCell>

@@ -2,6 +2,7 @@ import sys
 import time
 import getpass
 import subprocess
+import json
 from pathlib import Path
 
 
@@ -62,60 +63,176 @@ def resolve_command(candidates: list[str]) -> list[str]:
     raise RuntimeError(f"None of these commands were found on PATH: {', '.join(candidates)}")
 
 
+def check_docker_available() -> bool:
+    """Check if Docker is available and running"""
+    try:
+        result = subprocess.run(['docker', '--version'], capture_output=True, text=True, check=False)
+        if result.returncode != 0:
+            return False
+        
+        # Check if Docker daemon is running
+        result = subprocess.run(['docker', 'info'], capture_output=True, text=True, check=False)
+        return result.returncode == 0
+    except FileNotFoundError:
+        return False
+
+
+def get_existing_containers() -> list[str]:
+    """Get list of existing Docker containers (running and stopped)"""
+    try:
+        result = subprocess.run(['docker', 'ps', '-a', '--format', 'json'], 
+                              capture_output=True, text=True, check=False)
+        if result.returncode != 0:
+            return []
+        
+        containers = []
+        for line in result.stdout.strip().split('\n'):
+            if line.strip():
+                container = json.loads(line)
+                containers.append(container['Names'])
+        return containers
+    except Exception:
+        return []
+
+
+def get_existing_volumes() -> list[str]:
+    """Get list of existing Docker volumes"""
+    try:
+        result = subprocess.run(['docker', 'volume', 'ls', '--format', 'json'], 
+                              capture_output=True, text=True, check=False)
+        if result.returncode != 0:
+            return []
+        
+        volumes = []
+        for line in result.stdout.strip().split('\n'):
+            if line.strip():
+                volume = json.loads(line)
+                volumes.append(volume['Name'])
+        return volumes
+    except Exception:
+        return []
+
+
+def prompt_with_collision_check(prompt_text: str, existing_items: list[str], item_type: str, default: str | None = None) -> tuple[str, str]:
+    """Prompt user for input and handle collisions with existing items"""
+    while True:
+        suffix = f" [{default}]" if default else ""
+        value = input(f"{prompt_text}{suffix}: ").strip()
+        if not value and default:
+            value = default
+        if not value:
+            print(f"Please enter a valid {item_type} name")
+            continue
+        
+        if value in existing_items:
+            print(f"\nWarning: {item_type.capitalize()} '{value}' already exists!")
+            choice = input("Do you want to (r)eplace it, (k)eep existing, or (c)hoose different name? [r/k/c]: ").lower().strip()
+            
+            if choice == 'r':
+                print(f"Will replace existing {item_type} '{value}'")
+                return value, 'replace'
+            elif choice == 'k':
+                print(f"Will keep existing {item_type} '{value}'")
+                return value, 'keep'
+            elif choice == 'c':
+                continue
+            else:
+                print("Invalid choice. Please enter 'r', 'k', or 'c'")
+                continue
+        else:
+            return value, 'new'
+
+
+def handle_docker_conflicts(container_name: str, container_action: str, volume_name: str, volume_action: str):
+    """Handle replacement of existing Docker resources"""
+    if container_action == 'replace':
+        print(f"Removing existing container: {container_name}")
+        subprocess.run(['docker', 'stop', container_name], capture_output=True, check=False)
+        subprocess.run(['docker', 'rm', container_name], capture_output=True, check=False)
+    
+    if volume_action == 'replace':
+        print(f"Removing existing volume: {volume_name}")
+        subprocess.run(['docker', 'volume', 'rm', volume_name], capture_output=True, check=False)
+
+
+def create_docker_compose_template() -> str:
+    """Create docker-compose template with variables"""
+    return """services:
+  ${POSTGRES_SERVICE_NAME}:
+    image: postgres:latest
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    restart: always
+    ports:
+    - ${POSTGRES_HOST_PORT}:5432
+    volumes:
+    - ${POSTGRES_VOLUME_NAME}:/var/lib/postgresql/data
+volumes:
+  ${POSTGRES_VOLUME_NAME}: null
+"""
+
+
+def generate_docker_compose_from_template(template_content: str, config: dict) -> str:
+    """Generate docker-compose.yaml content from template and configuration"""
+    from string import Template
+    template = Template(template_content)
+    return template.substitute(config)
+
+
 def update_docker_compose(compose_path: Path, db_user: str, db_password: str, db_name: str, host_port: int):
     ensure_package("pyyaml", "yaml")
     import yaml  # type: ignore
 
-    with compose_path.open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+    # Check Docker availability and get existing resources
+    if not check_docker_available():
+        print("Warning: Docker not available. Skipping collision detection.")
+        existing_containers = []
+        existing_volumes = []
+    else:
+        existing_containers = get_existing_containers()
+        existing_volumes = get_existing_volumes()
+    
+    # Prompt for container and volume names with collision detection
+    print("\n=== Docker Configuration ===")
+    
+    # Service/Container name
+    container_name, container_action = prompt_with_collision_check(
+        "PostgreSQL container name", existing_containers, "container", "postgres_db_lab"
+    )
+    
+    # Volume name
+    volume_name, volume_action = prompt_with_collision_check(
+        "PostgreSQL volume name", existing_volumes, "volume", "pgdata"
+    )
+    
+    # Handle conflicts before creating compose file
+    handle_docker_conflicts(container_name, container_action, volume_name, volume_action)
 
-    # Defensive defaults
-    data = data or {}
-    services = data.setdefault("services", {})
-    # Try to find an existing Postgres service by image name
-    svc_name = None
-    for name, svc_def in services.items():
-        if isinstance(svc_def, dict):
-            img = svc_def.get("image", "")
-            if isinstance(img, str) and img.lower().startswith("postgres"):
-                svc_name = name
-                break
-    if not svc_name:
-        svc_name = "postgres_db_lab"
-    svc = services.setdefault(svc_name, {})
-
-    # Ensure required fields for a valid service
-    if not svc.get("image"):
-        svc["image"] = "postgres:latest"
-    svc.setdefault("restart", "always")
-
-    env = svc.setdefault("environment", {})
-    env["POSTGRES_USER"] = db_user
-    env["POSTGRES_PASSWORD"] = db_password
-    env["POSTGRES_DB"] = db_name
-
-    # ports: list of strings like "HOST:CONTAINER"
-    svc["ports"] = [f"{host_port}:5432"]
-
-    # volumes: ensure a named volume exists
-    if not svc.get("volumes"):
-        svc["volumes"] = ["pgdata1:/var/lib/postgresql/data"]
-
-    # Optionally prune duplicate broken services (no image and no build)
-    to_delete = []
-    for name, svc_def in services.items():
-        if name == svc_name:
-            continue
-        if not isinstance(svc_def, dict):
-            continue
-        if not svc_def.get("image") and not svc_def.get("build"):
-            to_delete.append(name)
-    for name in to_delete:
-        services.pop(name, None)
-
+    # Create configuration for template
+    config = {
+        'POSTGRES_SERVICE_NAME': container_name,
+        'POSTGRES_CONTAINER_NAME': container_name,
+        'POSTGRES_VOLUME_NAME': volume_name,
+        'POSTGRES_USER': db_user,
+        'POSTGRES_PASSWORD': db_password,
+        'POSTGRES_DB': db_name,
+        'POSTGRES_HOST_PORT': str(host_port)
+    }
+    
+    # Generate docker-compose content from template
+    template_content = create_docker_compose_template()
+    compose_content = generate_docker_compose_from_template(template_content, config)
+    
+    # Write the generated content
     with compose_path.open("w", encoding="utf-8") as f:
-        yaml.safe_dump(data, f, sort_keys=False)
-    print(f"✓ Updated docker-compose at {compose_path}")
+        f.write(compose_content)
+    
+    print(f"✓ Generated docker-compose at {compose_path} using template")
+    print(f"  Container: {container_name}")
+    print(f"  Volume: {volume_name}")
 
 
 def docker_compose_up(compose_path: Path, project_name: str = "database", remove_orphans: bool = False):

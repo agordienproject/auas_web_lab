@@ -156,13 +156,27 @@ export const streamInspectionImage = async (req: Request, res: Response) => {
             res.status(400).json({ error: 'Unsupported file type' });
             return;
         }
+        // Proactively verify existence to avoid sending headers then failing
+        const exists = await fileExists(folderPath, file);
+        if (!exists) {
+            res.status(404).json({ error: 'File not found' });
+            return;
+        }
+
         const contentType = file.toLowerCase().endsWith('.png') ? 'image/png'
             : file.toLowerCase().endsWith('.gif') ? 'image/gif'
             : 'image/jpeg';
         res.setHeader('Content-Type', contentType);
         await getImageStream(folderPath, file, res);
+        // Ensure the response is properly closed after streaming
+        if (!res.writableEnded) res.end();
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to stream image' });
+        // If headers/body already started, don't attempt to send another response
+        if (res.headersSent) {
+            try { if (!res.writableEnded) res.end(); } catch {}
+        } else {
+            res.status(500).json({ error: error.message || 'Failed to stream image' });
+        }
     }
 };
 
@@ -200,10 +214,23 @@ export const streamInspectionMedia = async (req: Request, res: Response) => {
             res.status(400).json({ error: 'Unsupported file type' });
             return;
         }
+        // Verify file exists before sending headers and streaming
+        const exists = await fileExists(folderPath, file);
+        if (!exists) {
+            res.status(404).json({ error: 'File not found' });
+            return;
+        }
         res.setHeader('Content-Type', contentType);
         await getFileStream(folderPath, file, res);
+        // Close response if not already closed by the writer
+        if (!res.writableEnded) res.end();
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to stream media' });
+        if (res.headersSent) {
+            try { if (!res.writableEnded) res.end(); } catch {}
+        } else {
+            res.status(500).json({ error: error.message || 'Failed to stream media' });
+        }
+        return;
     }
 };
 
